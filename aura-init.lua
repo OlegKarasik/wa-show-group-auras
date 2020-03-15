@@ -185,6 +185,13 @@ local function UnitHasAuras(unit)
     return result
 end
 
+local function UnitFadeAura(unit, aura_name)
+    local frame = aura_env.helpers.runtime.GetFrame(unit)
+    if frame then
+        aura_env.helpers.Fade(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+    end
+end
+
 local function UnitFadeAllAuras(unit)
     local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
@@ -197,26 +204,30 @@ local function UnitFadeAllAuras(unit)
     end
 end
 
-local function UnitGlowAllAuras(unit)
-    local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
+local function UnitGlowAura(unit, aura_name)
+    local frame = aura_env.helpers.runtime.GetFrame(unit)
+    if frame then
+        aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+    end
+end
 
-    for aura_name, aura_match in pairs(aura_result) do
-        if aura_match then
-            if aura_env.helpers.AuraIsInDebug() then
-                print('HELPER: '..name..' has '..aura_name..' aura')
-            end
-        else
-            if aura_env.helpers.AuraIsInDebug() then
-                print('HELPER: '..name..' has no '..aura_name..' aura')
-            end
+local function UnitGlowAllAuras(unit, aura_result)
+    local frame = aura_env.helpers.runtime.GetFrame(unit)
+    if frame then
+        for aura_name, aura_match in pairs(aura_result) do
+            if aura_match then
+                if aura_env.helpers.AuraIsInDebug() then
+                    print('HELPER: '..name..' has '..aura_name..' aura')
+                end
+            else
+                if aura_env.helpers.AuraIsInDebug() then
+                    print('HELPER: '..name..' has no '..aura_name..' aura')
+                end
 
-            if frame then
-                aura_env.helpers.glow(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+                aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
             end
         end
     end
-
-    return aura_result
 end
 
 local function IsInCombat()
@@ -323,7 +334,10 @@ end
 aura_env.runtime.helpers.UnitMatchAuraActivationRules = UnitMatchAuraActivationRules
 aura_env.runtime.helpers.UnitHasAuras = UnitHasAuras
 
+aura_env.runtime.helpers.UnitFadeAura = UnitFadeAura
 aura_env.runtime.helpers.UnitFadeAllAuras = UnitFadeAllAuras
+
+aura_env.runtime.helpers.UnitGlowAura = UnitGlowAura
 aura_env.runtime.helpers.UnitGlowAllAuras = UnitGlowAllAuras
 
 aura_env.runtime.helpers.IsInCombat  = IsInCombat
