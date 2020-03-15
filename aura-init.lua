@@ -186,7 +186,7 @@ local function UnitHasAuras(unit)
 end
 
 local function UnitFadeAura(unit, aura_name)
-    local frame = aura_env.helpers.runtime.GetFrame(unit)
+    local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
         aura_env.helpers.Fade(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
     end
@@ -205,14 +205,14 @@ local function UnitFadeAllAuras(unit)
 end
 
 local function UnitGlowAura(unit, aura_name)
-    local frame = aura_env.helpers.runtime.GetFrame(unit)
+    local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
         aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
     end
 end
 
 local function UnitGlowAllAuras(unit, aura_result)
-    local frame = aura_env.helpers.runtime.GetFrame(unit)
+    local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
         for aura_name, aura_match in pairs(aura_result) do
             if aura_match then

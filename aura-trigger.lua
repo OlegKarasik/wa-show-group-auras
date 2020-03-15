@@ -1,17 +1,17 @@
 function(allstates, event, unit)
     local function UpdateUnitAuraStates(states, unit, aura_result)
         for aura_name, aura_match in pairs(aura_result) do
-            if not state[aura_name] then
-                state[aura_name] = {
+            if not states[aura_name] then
+                states[aura_name] = {
                     matchCount = 0,
                     units = { 
                     }
                 }
             end
             if aura_match then
-                state[aura_name].matchCount = state[aura_name].matchCount + 1
+                states[aura_name].matchCount = states[aura_name].matchCount + 1
             end
-            state[aura_name].units[unit] = aura_match
+            states[aura_name].units[unit] = aura_match
         end
     end
     if event == 'GROUP_ROSTER_UPDATE' then
@@ -40,9 +40,9 @@ function(allstates, event, unit)
                 aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
 
                 if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
-                    local aura_result = aura_env.runtime.helpers.UnitGetAuras(normalized_unit)
+                    local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
 
-                    UpdateUnitAuraStates(states, unit, aura_result)
+                    UpdateUnitAuraStates(states, normalized_unit, aura_result)
 
                     aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
                 end
@@ -111,9 +111,9 @@ function(allstates, event, unit)
             local normalized_unit = aura_env.helpers.NormalizeUnit(member)
             if normalized_unit then
                 if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
-                    local aura_result = aura_env.runtime.helpers.UnitGetAuras(normalized_unit)
-                    
-                    UpdateUnitAuraStates(states, unit, aura_result)
+                    local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
+
+                    UpdateUnitAuraStates(states, normalized_unit, aura_result)
                     
                     aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
                 end
@@ -125,6 +125,7 @@ function(allstates, event, unit)
             if state.matchCount > 0 then
                 state.show = true
             end
+
             state.changed = true
 
             allstates[aura_name] = state
