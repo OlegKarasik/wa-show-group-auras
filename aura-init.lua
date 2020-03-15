@@ -68,13 +68,16 @@ local function NormalizeUnit(unit)
     return normalized_unit
 end
 
-local function GetFrameAuraKey(frame, aura)
-    return 'frame:'..frame:GetName()..' aura:'..aura
+local function GetFrameAuraKey(aura)
+    return 'aura:'..aura
 end
 
 local LCG = LibStub("LibCustomGlow-1.0")
 
 local function Glow(frame, id) 
+    if aura_env.helpers.AuraIsInDebug() then
+        print('HELPER: Glowing frame ('..frame:GetName()..'), id ('..id..')')
+    end
     LCG.PixelGlow_Start(
         frame, 
         aura_env.config.glow.color, 
@@ -90,8 +93,41 @@ local function Glow(frame, id)
 end
 
 local function Fade(frame, id)
+    if aura_env.helpers.AuraIsInDebug() then
+        print('HELPER: Fading frame ('..frame:GetName()..'), id ('..id..')')
+    end
     LCG.PixelGlow_Stop(frame, id)
 end
+
+local WaitQueue = { };
+local WaitQueueFrame = nil;
+
+local WaitClosure = aura_env
+
+local function DelayExecution(f)
+    if not WaitQueueFrame then
+        WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent);
+        WaitQueueFrame:SetScript(
+            "onUpdate",
+            function (self, elapse)
+                local count = #WaitQueue;
+
+                local i = 1;
+                while i <= count do
+                    local fn = tremove(WaitQueue, i);
+                    if fn then 
+                        fn()
+                    end
+                    i = i + 1
+                end
+            end);
+    end
+
+    tinsert(WaitQueue, f);
+    return true;
+end
+
+aura_env.helpers.DelayExecution = DelayExecution
 
 aura_env.helpers.Glow = Glow
 aura_env.helpers.Fade = Fade
@@ -142,9 +178,9 @@ local function UnitMatchAuraActivationRules(unit)
     end
     
     -- CORE RULE
-    if unit ~= 'player' and not unit:find('^raid%d+') and not unit:find('^party%d+') then
+    if ((unit ~= 'player') or (IsInRaid() and unit == 'player')) and not unit:find('^raid%d+') and not unit:find('^party%d+') then
         if aura_env.helpers.AuraIsInDebug() then
-            print('HELPER: '..name..' ('..unit..') isn\'t player, party or raid member')
+            print('HELPER: '..name..' ('..unit..') isn\'t player (or player but in raid), party or raid member')
         end
         return false
     end
@@ -188,7 +224,7 @@ end
 local function UnitFadeAura(unit, aura_name)
     local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
-        aura_env.helpers.Fade(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+        aura_env.helpers.Fade(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
     end
 end
 
@@ -196,10 +232,7 @@ local function UnitFadeAllAuras(unit)
     local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
         for aura_name, _ in pairs(aura_env.runtime.config.auras) do
-            if aura_env.helpers.AuraIsInDebug() then
-                print('HELPER: '..name..' ('..unit..') fading '..aura_name)
-            end
-            aura_env.helpers.Fade(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+            aura_env.helpers.Fade(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
         end
     end
 end
@@ -207,7 +240,7 @@ end
 local function UnitGlowAura(unit, aura_name)
     local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
-        aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+        aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
     end
 end
 
@@ -215,16 +248,8 @@ local function UnitGlowAllAuras(unit, aura_result)
     local frame = aura_env.runtime.helpers.GetFrame(unit)
     if frame then
         for aura_name, aura_match in pairs(aura_result) do
-            if aura_match then
-                if aura_env.helpers.AuraIsInDebug() then
-                    print('HELPER: '..name..' has '..aura_name..' aura')
-                end
-            else
-                if aura_env.helpers.AuraIsInDebug() then
-                    print('HELPER: '..name..' has no '..aura_name..' aura')
-                end
-
-                aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(frame, aura_name))
+            if not aura_match then
+                aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
             end
         end
     end
@@ -274,11 +299,16 @@ local function GetFrames(target)
             if type == 'Button' then
                 local unit = frame:GetAttribute('unit')
                 if unit and frame:IsVisible() and frame:GetName() then
-                    aura_env.runtime.frames[frame] = unit
+                    if aura_env.helpers.AuraIsInDebug() then
+                        print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..')')
+                    end
+
                     if UnitIsUnit(unit, target) then
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('HELPER: frame ('..frame:GetName()..')')
+                            print('HELPER: Caching frame ('..frame:GetName()..') for unit ('..unit..')')
                         end
+
+                        aura_env.runtime.frames[frame] = unit
                         
                         tinsert(results, frame)
                     end
@@ -301,7 +331,7 @@ local function GetFrames(target)
         if UnitIsUnit(unit, target) then
             if frame:GetAttribute('unit') == unit then
                 if aura_env.helpers.AuraIsInDebug() then
-                    print('HELPER: frame from cache ('..frame:GetName()..')')
+                    print('HELPER: Frame from cache ('..frame:GetName()..')')
                 end
                 tinsert(results, frame)
             else
@@ -315,6 +345,10 @@ local function GetFrames(target)
 end
 
 local function GetFrame(target)
+    if aura_env.helpers.AuraIsInDebug() then
+        local name = UnitName(target)
+        print('HELPER: Framing '..name..' ('..target..')')
+    end
     local frames = GetFrames(target)
     if not frames then return nil end
     for i=1,#frame_priority do

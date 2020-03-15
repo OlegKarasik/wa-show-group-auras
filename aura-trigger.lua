@@ -8,10 +8,10 @@ function(allstates, event, unit)
                     }
                 }
             end
-            if aura_match then
+            if not aura_match then
                 states[aura_name].matchCount = states[aura_name].matchCount + 1
             end
-            states[aura_name].units[unit] = aura_match
+            states[aura_name].units[unit] = not aura_match
         end
     end
     if event == 'GROUP_ROSTER_UPDATE' then
@@ -25,7 +25,7 @@ function(allstates, event, unit)
             end
             return false
         end
-        
+
         -- Initialize empty auras states
         local states = { }
         
@@ -37,14 +37,29 @@ function(allstates, event, unit)
         for member in WA_IterateGroupMembers() do
             local normalized_unit = aura_env.helpers.NormalizeUnit(member)
             if normalized_unit then
-                aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
+                -- Visual Update
+                local capture_aura_env = aura_env;
+                aura_env.helpers.DelayExecution(
+                    function ()
+                        if not aura_env then aura_env = capture_aura_env end
+
+                        aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
+                    end)
+                --
 
                 if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
                     local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
 
                     UpdateUnitAuraStates(states, normalized_unit, aura_result)
 
-                    aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                    -- Visual Update
+                    aura_env.helpers.DelayExecution(
+                        function ()
+                            if not aura_env then aura_env = capture_aura_env end
+
+                            aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                        end)
+                    --
                 end
             end
         end
@@ -78,7 +93,15 @@ function(allstates, event, unit)
                 end
 
                 if match then
-                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
+                    -- Visual Update
+                    local capture_aura_env = aura_env;
+                    aura_env.helpers.DelayExecution(
+                        function ()
+                            if not aura_env then aura_env = capture_aura_env end
+
+                            aura_env.runtime.helpers.UnitFadeAllAuras(unit)
+                        end)
+                    --
                 end
             end
             
@@ -115,7 +138,15 @@ function(allstates, event, unit)
 
                     UpdateUnitAuraStates(states, normalized_unit, aura_result)
                     
-                    aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                    -- Visual Update
+                    local capture_aura_env = aura_env;
+                    aura_env.helpers.DelayExecution(
+                        function ()
+                            if not aura_env then aura_env = capture_aura_env end
+
+                            aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                        end)
+                    --
                 end
             end
         end
@@ -200,7 +231,15 @@ function(allstates, event, unit)
                         }
                     end
 
-                    aura_env.runtime.helpers.UnitFadeAura(unit, aura_name)
+                    -- Visual Update
+                    local capture_aura_env = aura_env;
+                    aura_env.helpers.DelayExecution(
+                        function ()
+                            if not aura_env then aura_env = capture_aura_env end
+
+                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_name)
+                        end)
+                    --
 
                     result = true
                     break
@@ -228,7 +267,7 @@ function(allstates, event, unit)
                         print('TRIGGER: '..name..' ('..normalized_unit..') has no aura, state not found, marking')
                     end
                     
-                    allstates['player'] = {
+                    allstates[aura_name] = {
                         show = true,
                         changed = true,
                         matchCount = 1,
@@ -237,7 +276,16 @@ function(allstates, event, unit)
                         }
                     }
                 end
-                aura_env.runtime.helpers.UnitGlowAura(unit, aura_name)
+
+                -- Visual Update
+                local capture_aura_env = aura_env;
+                aura_env.helpers.DelayExecution(
+                    function ()
+                        if not aura_env then aura_env = capture_aura_env end
+
+                        aura_env.runtime.helpers.UnitGlowAura(unit, aura_name)
+                    end)
+                --
 
                 result = true
                 break
