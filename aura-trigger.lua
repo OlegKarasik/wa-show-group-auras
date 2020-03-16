@@ -66,9 +66,7 @@ function(allstates, event, unit)
 
         -- Control aura display
         for aura_name, state in pairs(states) do
-            if state.matchCount > 0 then
-                state.show = true
-            end
+            state.show = state.matchCount > 0
             state.changed = true
 
             allstates[aura_name] = state
@@ -153,10 +151,7 @@ function(allstates, event, unit)
 
         -- Control aura display
         for aura_name, state in pairs(states) do
-            if state.matchCount > 0 then
-                state.show = true
-            end
-
+            state.show = state.matchCount > 0
             state.changed = true
 
             allstates[aura_name] = state
@@ -212,7 +207,7 @@ function(allstates, event, unit)
                             print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state found, marking') 
                         end
                         
-                        state.show = true
+                        state.show = state.matchCount > 1
                         state.changed = true
                         state.matchCount = state.matchCount - 1
                         state.units[unit] = false
@@ -222,7 +217,7 @@ function(allstates, event, unit)
                         end
                         
                         allstates[aura_name] = {
-                            show = true,
+                            show = false,
                             changed = true,
                             matchCount = 0,        
                             units = {
