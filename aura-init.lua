@@ -300,16 +300,12 @@ local function GetFrames(target)
                 local unit = frame:GetAttribute('unit')
                 if unit and frame:IsVisible() and frame:GetName() then
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..')')
+                        print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..'), caching')
                     end
 
-                    if UnitIsUnit(unit, target) then
-                        if aura_env.helpers.AuraIsInDebug() then
-                            print('HELPER: Caching frame ('..frame:GetName()..') for unit ('..unit..')')
-                        end
+                    aura_env.runtime.frames[frame] = unit
 
-                        aura_env.runtime.frames[frame] = unit
-                        
+                    if UnitIsUnit(unit, target) then
                         tinsert(results, frame)
                     end
                 end
@@ -351,7 +347,7 @@ local function GetFrame(target)
     end
     local frames = GetFrames(target)
     if not frames then return nil end
-    for i=1,#frame_priority do
+    for i=1, #frame_priority do
         for _,frame in pairs(frames) do
             if (frame:GetName()):find(frame_priority[i]) then
                 return frame
