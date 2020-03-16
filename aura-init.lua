@@ -1,6 +1,13 @@
 -- CONFIGURATION MAPPINGS --
 
-local when_classes_to_blizzard_classes = {
+local auras_to_blizzard_auras = {
+    [1] = {
+        name = 'arcane-intellegence',
+        ids = { 23028, 10157, 10156, 1461, 1460, 1459 }
+    }
+}
+
+local classes_to_blizzard_classes = {
     [1] = 'WARRIOR',
     [2] = 'PALADIN',
     [3] = 'HUNTER',
@@ -171,7 +178,7 @@ aura_env.runtime = {
 -- which can be accessed anywhere after the aure is
 -- initialized
 
-local function UnitMatchAuraActivationRules(unit)
+local function UnitMatchAuraActivationRules(unit, aura_name)
     local name = nil
     if aura_env.helpers.AuraIsInDebug() then
         name = UnitName(unit)
@@ -186,8 +193,10 @@ local function UnitMatchAuraActivationRules(unit)
     end
     
     -- CLASS RULES
+    local aura_config = aura_env.runtime.config.auras[aura_name]
+
     local _, english_class = UnitClass(unit)
-    if aura_env.runtime.config.classes[english_class] then
+    if aura_config.classes[english_class] then
         if aura_env.helpers.AuraIsInDebug() then
             print('HELPER: '..name..' ('..unit..', '..english_class..') matched \'class\' activation rule')
         end
@@ -386,11 +395,26 @@ if aura_env.helpers.AuraIsInDebug() then
     print('Aura version: 0.1')
 end
 
-for key, value in ipairs(aura_env.config.when.classes) do
-    local blizzard_class = when_classes_to_blizzard_classes[key]
-    if aura_env.helpers.AuraIsInDebug() and value then
-        print('Enabling aura tracking on: '..blizzard_class..' class')
+for _, aura_config in pairs(aura_env.config.auras) do
+    local blizzard_aura = auras_to_blizzard_auras[aura_config.aura]
+    if blizzard_aura then
+        local aura_name = blizzard_aura.name
+        if aura_env.helpers.AuraIsInDebug() then
+            print('Enabling tracking of : '..aura_name..' aura')
+        end
+
+        aura_env.runtime.config[aura_name] = {
+            ids = blizzard_aura.ids,
+            classes = { }
+        }
+
+        for class, enabled in ipairs(aura_config.classes) do
+            local blizzard_class = classes_to_blizzard_classes[class]
+            if aura_env.helpers.AuraIsInDebug() and enabled then
+                print('- Tracking : '..blizzard_class..' class')
+            end
+            
+            aura_env.runtime.config[aura_name].classes[blizzard_class] = enabled   
+        end
     end
-    
-    aura_env.runtime.config.classes[when_classes_to_blizzard_classes[key]] = value   
 end
