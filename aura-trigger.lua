@@ -29,40 +29,45 @@ function(allstates, event, unit)
         -- Initialize empty auras states
         local states = { }
         
-        -- Clear frame cache to ensure all auras 
-        -- are cleared as expected
-        aura_env.runtime.helpers.ClearFrameCache()
-        
         -- Iterate over raid or party restoring auras states and glows
+        -- aura_results is used to store visualization information for 
+        -- each normalized unit
+
+        local aura_results = { }
+        
         for member in WA_IterateGroupMembers() do
             local normalized_unit = aura_env.helpers.NormalizeUnit(member)
             if normalized_unit then
-                -- Visual Update
-                local capture_aura_env = aura_env;
-                aura_env.helpers.DelayExecution(
-                    function ()
-                        if not aura_env then aura_env = capture_aura_env end
-
-                        aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
-                    end)
-                --
+                -- Include unit into aura_results
+                aura_results[normalized_unit] = { }
 
                 if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
                     local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
 
                     UpdateUnitAuraStates(states, normalized_unit, aura_result)
 
-                    -- Visual Update
-                    aura_env.helpers.DelayExecution(
-                        function ()
-                            if not aura_env then aura_env = capture_aura_env end
-
-                            aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
-                        end)
-                    --
+                    -- Set unit aura result
+                    aura_results[normalized_unit] = aura_result
                 end
             end
         end
+
+        -- Visual Update
+        local capture_aura_env = aura_env;
+        aura_env.helpers.DelayExecution(
+            function ()
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+
+                aura_env.runtime.helpers.ClearFrameCache()
+                
+                for normalized_unit, aura_result in pairs(aura_results) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                end
+            end)
+        --
 
         -- Control aura display
         for aura_name, state in pairs(states) do
@@ -82,30 +87,40 @@ function(allstates, event, unit)
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: Entering combat') 
         end
+
+        -- Iterate over the states and 
+        -- include all units with auras to fade
+        -- table
+
+        local units = { }
         
         for aura_name, state in pairs(allstates) do
             for unit, match in pairs(state.units) do
-                local name = nil
-                if aura_env.helpers.AuraIsInDebug() then
-                    name = UnitName(unit)
-                end
-
                 if match then
-                    -- Visual Update
-                    local capture_aura_env = aura_env;
-                    aura_env.helpers.DelayExecution(
-                        function ()
-                            if not aura_env then aura_env = capture_aura_env end
-
-                            aura_env.runtime.helpers.UnitFadeAllAuras(unit)
-                        end)
-                    --
+                    units[unit] = true
                 end
             end
             
+            -- Deactivate aura
             state.show = false
             state.changed = true
         end
+
+        -- Visual Update
+        local capture_aura_env = aura_env;
+        aura_env.helpers.DelayExecution(
+            function ()
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+
+                aura_env.runtime.helpers.ClearFrameCache()
+                
+                for unit in pairs(units) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
+                end
+            end)
+        --
         
         aura_env.runtime.helpers.EnterCombat()
         
@@ -123,31 +138,45 @@ function(allstates, event, unit)
         -- Initialize empty auras states
         local states = { }
         
-        -- Clear frame cache to ensure all auras 
-        -- are cleared as expected
-        aura_env.runtime.helpers.ClearFrameCache()
-        
         -- Iterate over raid or party restoring auras states and glows
+        -- aura_results is used to store visualization information for 
+        -- each normalized unit
+
+        local aura_results = { }
+        
         for member in WA_IterateGroupMembers() do
             local normalized_unit = aura_env.helpers.NormalizeUnit(member)
             if normalized_unit then
+                -- Include unit into aura_results
+                aura_results[normalized_unit] = { }
+
                 if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
                     local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
 
                     UpdateUnitAuraStates(states, normalized_unit, aura_result)
-                    
-                    -- Visual Update
-                    local capture_aura_env = aura_env;
-                    aura_env.helpers.DelayExecution(
-                        function ()
-                            if not aura_env then aura_env = capture_aura_env end
 
-                            aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
-                        end)
-                    --
+                    -- Set unit aura result
+                    aura_results[normalized_unit] = aura_result
                 end
             end
         end
+
+        -- Visual Update
+        local capture_aura_env = aura_env;
+        aura_env.helpers.DelayExecution(
+            function ()
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+
+                aura_env.runtime.helpers.ClearFrameCache()
+                
+                for normalized_unit, aura_result in pairs(aura_results) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                end
+            end)
+        --
 
         -- Control aura display
         for aura_name, state in pairs(states) do
