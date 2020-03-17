@@ -99,6 +99,9 @@ local function Fade(frame, id)
     LCG.PixelGlow_Stop(frame, id)
 end
 
+-- Customized version of User-defined wait function
+-- from https://wowwiki.fandom.com/wiki/USERAPI_wait
+
 local WaitQueue = { };
 local WaitQueueFrame = nil;
 
