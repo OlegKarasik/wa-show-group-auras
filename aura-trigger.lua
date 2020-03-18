@@ -213,7 +213,7 @@ function(allstates, event, unit)
 
         local name = nil
         if aura_env.helpers.AuraIsInDebug() then
-            name = UnitName(normalized_unit)
+            name = aura_env.helpers.UnitNameSafe(normalized_unit)
         end
 
         local result = false

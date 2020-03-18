@@ -25,6 +25,10 @@ local function AuraIsInDebug()
     return aura_env.config.internal.debug
 end
 
+local function UnitNameSafe(unit)
+    return UnitName(unit) or '<unknown>'
+end
+
 local function NormalizeUnit(unit)
     local function Normalize(unit)
         if IsInRaid() then 
@@ -136,6 +140,7 @@ aura_env.helpers.Glow = Glow
 aura_env.helpers.Fade = Fade
 
 aura_env.helpers.AuraIsInDebug = AuraIsInDebug
+aura_env.helpers.UnitNameSafe = UnitNameSafe
 aura_env.helpers.NormalizeUnit = NormalizeUnit
 aura_env.helpers.GetFrameAuraKey = GetFrameAuraKey
 
@@ -177,7 +182,7 @@ aura_env.runtime = {
 local function UnitMatchAuraActivationRules(unit)
     local name = nil
     if aura_env.helpers.AuraIsInDebug() then
-        name = UnitName(unit)
+        name = aura_env.helpers.UnitNameSafe(unit)
     end
     
     -- CORE RULE
@@ -345,7 +350,7 @@ end
 
 local function GetFrame(target)
     if aura_env.helpers.AuraIsInDebug() then
-        local name = UnitName(target)
+        local name = aura_env.helpers.UnitNameSafe(target)
         print('HELPER: Framing '..name..' ('..target..')')
     end
     local frames = GetFrames(target)
@@ -358,7 +363,7 @@ local function GetFrame(target)
         end
     end
     if aura_env.helpers.AuraIsInDebug() then
-        local name = UnitName(target)
+        local name = aura_env.helpers.UnitNameSafe(target)
         print('HELPER: '..name..' ('..target..') frame not found')
     end
     return nil
