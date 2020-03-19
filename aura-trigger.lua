@@ -172,7 +172,8 @@ function(allstates, event, unit)
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for normalized_unit, aura_result in pairs(aura_results) do
-                    aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
+                    -- If we process enter / leave combat events sequence then
+                    -- all unit auras were already faded (on enter)
                     aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
                 end
             end)
@@ -242,17 +243,12 @@ function(allstates, event, unit)
                         state.units[unit] = false
                     else
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state not found, marking')
+                            print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state not found, skipping')
                         end
                         
-                        allstates[aura_name] = {
-                            show = false,
-                            changed = true,
-                            matchCount = 0,        
-                            units = {
-                                [unit] = false
-                            }
-                        }
+                        -- Just do nothing and proceed to next aura
+
+                        break
                     end
 
                     -- Visual Update
