@@ -253,12 +253,23 @@ local function UnitGlowAura(unit, aura_name)
 end
 
 local function UnitGlowAllAuras(unit, aura_result)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        for aura_name, aura_match in pairs(aura_result) do
-            if not aura_match then
-                aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
+    local frame = nil
+    for aura_name, aura_match in pairs(aura_result) do
+        if not aura_match then
+            if not frame then 
+                -- Lazely initialize frame
+                -- This can save cycles because inside this function
+                -- we don't really know if we would need to update frame
+                -- graphics
+                -- 
+                -- Example case: when leaving combat
+                frame = aura_env.runtime.helpers.GetFrame(unit)
+                if not frame then
+                    break
+                end
             end
+
+            aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
         end
     end
 end
