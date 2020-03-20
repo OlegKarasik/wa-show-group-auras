@@ -240,7 +240,7 @@ function(allstates, event, unit)
                         state.show = state.matchCount > 1
                         state.changed = true
                         state.matchCount = state.matchCount - 1
-                        state.units[unit] = false
+                        state.units[normalized_unit] = false
                     else
                         if aura_env.helpers.AuraIsInDebug() then
                             print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state not found, skipping')
@@ -257,7 +257,7 @@ function(allstates, event, unit)
                         function ()
                             if not aura_env then aura_env = capture_aura_env end
 
-                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_name)
+                            aura_env.runtime.helpers.UnitFadeAura(normalized_unit, aura_name)
                         end)
                     --
 
@@ -266,7 +266,7 @@ function(allstates, event, unit)
                 end
                 
                 if state then
-                    if state.units[unit] then
+                    if state.units[normalized_unit] then
                         if aura_env.helpers.AuraIsInDebug() then
                             print('TRIGGER: '..name..' ('..normalized_unit..') has no aura, state found, no changes, skipping')
                         end
@@ -281,7 +281,7 @@ function(allstates, event, unit)
                     state.show = true
                     state.changed = true
                     state.matchCount = state.matchCount + 1
-                    state.units[unit] = true
+                    state.units[normalized_unit] = true
                 else
                     if aura_env.helpers.AuraIsInDebug() then
                         print('TRIGGER: '..name..' ('..normalized_unit..') has no aura, state not found, marking')
@@ -292,7 +292,7 @@ function(allstates, event, unit)
                         changed = true,
                         matchCount = 1,
                         units = {
-                            [unit] = true
+                            [normalized_unit] = true
                         }
                     }
                 end
@@ -303,7 +303,7 @@ function(allstates, event, unit)
                     function ()
                         if not aura_env then aura_env = capture_aura_env end
 
-                        aura_env.runtime.helpers.UnitGlowAura(unit, aura_name)
+                        aura_env.runtime.helpers.UnitGlowAura(normalized_unit, aura_name)
                     end)
                 --
 
