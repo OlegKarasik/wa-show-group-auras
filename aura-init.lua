@@ -186,13 +186,13 @@ local function UnitMatchAuraActivationRules(unit)
     end
     
     -- CORE RULE
-    if ((unit ~= 'player') or (IsInRaid() and unit == 'player')) and not unit:find('^raid%d+') and not unit:find('^party%d+') then
+    if (IsInRaid() and not unit:find('^raid%d+')) or (unit ~= 'player' and not unit:find('^party%d+')) then
         if aura_env.helpers.AuraIsInDebug() then
-            print('HELPER: '..name..' ('..unit..') isn\'t player (or player but in raid), party or raid member')
+            print('HELPER: '..name..' ('..unit..') doesn\'t match party or raid context.')
         end
         return false
     end
-    
+
     -- CLASS RULES
     local _, english_class = UnitClass(unit)
     if aura_env.runtime.config.classes[english_class] then
