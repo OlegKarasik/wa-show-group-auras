@@ -35,20 +35,17 @@ function(allstates, event, unit)
 
         local aura_results = { }
         
-        for member in WA_IterateGroupMembers() do
-            local normalized_unit = aura_env.helpers.NormalizeUnit(member)
-            if normalized_unit then
-                -- Include unit into aura_results
-                aura_results[normalized_unit] = { }
+        for unit in WA_IterateGroupMembers() do
+            -- Include unit into aura_results
+            aura_results[unit] = { }
 
-                if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
-                    local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
+            if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
+                local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
 
-                    UpdateUnitAuraStates(states, normalized_unit, aura_result)
+                UpdateUnitAuraStates(states, unit, aura_result)
 
-                    -- Set unit aura result
-                    aura_results[normalized_unit] = aura_result
-                end
+                -- Set unit aura result
+                aura_results[unit] = aura_result
             end
         end
 
@@ -62,9 +59,9 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for normalized_unit, aura_result in pairs(aura_results) do
-                    aura_env.runtime.helpers.UnitFadeAllAuras(normalized_unit)
-                    aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                for unit, aura_result in pairs(aura_results) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_result)
                 end
             end)
         --
@@ -144,20 +141,17 @@ function(allstates, event, unit)
 
         local aura_results = { }
         
-        for member in WA_IterateGroupMembers() do
-            local normalized_unit = aura_env.helpers.NormalizeUnit(member)
-            if normalized_unit then
-                -- Include unit into aura_results
-                aura_results[normalized_unit] = { }
+        for unit in WA_IterateGroupMembers() do
+            -- Include unit into aura_results
+            aura_results[unit] = { }
 
-                if aura_env.runtime.helpers.UnitMatchAuraActivationRules(normalized_unit) then
-                    local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
+            if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
+                local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
 
-                    UpdateUnitAuraStates(states, normalized_unit, aura_result)
+                UpdateUnitAuraStates(states, unit, aura_result)
 
-                    -- Set unit aura result
-                    aura_results[normalized_unit] = aura_result
-                end
+                -- Set unit aura result
+                aura_results[unit] = aura_result
             end
         end
 
@@ -171,10 +165,10 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for normalized_unit, aura_result in pairs(aura_results) do
+                for unit, aura_result in pairs(aura_results) do
                     -- If we process enter / leave combat events sequence then
                     -- all unit auras were already faded (on enter)
-                    aura_env.runtime.helpers.UnitGlowAllAuras(normalized_unit, aura_result)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_result)
                 end
             end)
         --
@@ -207,43 +201,38 @@ function(allstates, event, unit)
             return false
         end
         
-        local normalized_unit = aura_env.helpers.NormalizeUnit(unit)
-        if not normalized_unit then
-            return false
-        end
-
         local name = nil
         if aura_env.helpers.AuraIsInDebug() then
-            name = aura_env.helpers.UnitNameSafe(normalized_unit)
+            name = aura_env.helpers.UnitNameSafe(unit)
         end
 
         local result = false
 
-        local aura_result = aura_env.runtime.helpers.UnitHasAuras(normalized_unit)
+        local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
         for aura_name, aura_match in pairs(aura_result) do
             local state = allstates[aura_name]
             repeat
                 if aura_match then
                     if state then
-                        if not state.units[normalized_unit] then
+                        if not state.units[unit] then
                             if aura_env.helpers.AuraIsInDebug() then
-                                print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state found, no changes, skipping') 
+                                print('TRIGGER: '..name..' ('..unit..') has aura, state found, no changes, skipping') 
                             end
                             
                             break
                         end
                         
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state found, marking') 
+                            print('TRIGGER: '..name..' ('..unit..') has aura, state found, marking') 
                         end
                         
                         state.show = state.matchCount > 1
                         state.changed = true
                         state.matchCount = state.matchCount - 1
-                        state.units[normalized_unit] = false
+                        state.units[unit] = false
                     else
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..normalized_unit..') has aura, state not found, skipping')
+                            print('TRIGGER: '..name..' ('..unit..') has aura, state not found, skipping')
                         end
                         
                         -- Just do nothing and proceed to next aura
@@ -257,7 +246,7 @@ function(allstates, event, unit)
                         function ()
                             if not aura_env then aura_env = capture_aura_env end
 
-                            aura_env.runtime.helpers.UnitFadeAura(normalized_unit, aura_name)
+                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_name)
                         end)
                     --
 
@@ -266,25 +255,25 @@ function(allstates, event, unit)
                 end
                 
                 if state then
-                    if state.units[normalized_unit] then
+                    if state.units[unit] then
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..normalized_unit..') has no aura, state found, no changes, skipping')
+                            print('TRIGGER: '..name..' ('..unit..') has no aura, state found, no changes, skipping')
                         end
                         
                         break
                     end
                     
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('TRIGGER: '..name..' ('..normalized_unit..') has no aura, state found, marking')
+                        print('TRIGGER: '..name..' ('..unit..') has no aura, state found, marking')
                     end
                     
                     state.show = true
                     state.changed = true
                     state.matchCount = state.matchCount + 1
-                    state.units[normalized_unit] = true
+                    state.units[unit] = true
                 else
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('TRIGGER: '..name..' ('..normalized_unit..') has no aura, state not found, marking')
+                        print('TRIGGER: '..name..' ('..unit..') has no aura, state not found, marking')
                     end
                     
                     allstates[aura_name] = {
@@ -292,7 +281,7 @@ function(allstates, event, unit)
                         changed = true,
                         matchCount = 1,
                         units = {
-                            [normalized_unit] = true
+                            [unit] = true
                         }
                     }
                 end
@@ -303,7 +292,7 @@ function(allstates, event, unit)
                     function ()
                         if not aura_env then aura_env = capture_aura_env end
 
-                        aura_env.runtime.helpers.UnitGlowAura(normalized_unit, aura_name)
+                        aura_env.runtime.helpers.UnitGlowAura(unit, aura_name)
                     end)
                 --
 

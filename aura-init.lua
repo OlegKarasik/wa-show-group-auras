@@ -29,49 +29,6 @@ local function UnitNameSafe(unit)
     return UnitName(unit) or '<unknown>'
 end
 
-local function NormalizeUnit(unit)
-    local function Normalize(unit)
-        if IsInRaid() then 
-            if unit:find('^raid%d+') then 
-                return unit
-            end
-            
-            local raid_index = UnitInRaid(unit)
-            if raid_index and UnitIsPlayer(unit) then
-                return 'raid'..tostring(raid_index)
-            end
-        else
-            if unit == 'player' then
-                return unit
-            end
-            
-            if IsInGroup() then
-                if unit:find('^party%d+') then 
-                    return unit
-                end
-                
-                -- Iterate over party members only --
-                for member in WA_IterateGroupMembers(true) do
-                    if UnitIsUnit(unit, member) then
-                        return member
-                    end
-                end
-            end
-        end
-        return nil
-    end
-    
-    local normalized_unit = Normalize(unit)
-    if aura_env.helpers.AuraIsInDebug() then
-        if normalized_unit then
-            print('HELPER: ('..unit..') was normalized to ('..normalized_unit..')')
-        else
-            print('HELPER: ('..unit..') was\'t normalized')
-        end
-    end
-    return normalized_unit
-end
-
 local function GetFrameAuraKey(aura)
     return 'aura:'..aura
 end
@@ -141,7 +98,6 @@ aura_env.helpers.Fade = Fade
 
 aura_env.helpers.AuraIsInDebug = AuraIsInDebug
 aura_env.helpers.UnitNameSafe = UnitNameSafe
-aura_env.helpers.NormalizeUnit = NormalizeUnit
 aura_env.helpers.GetFrameAuraKey = GetFrameAuraKey
 
 -- RUNTIME CONFIGURATION --
