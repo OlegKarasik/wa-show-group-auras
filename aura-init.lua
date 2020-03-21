@@ -3,7 +3,8 @@
 local auras_to_blizzard_auras = {
     [1] = {
         name = 'arcane-intellegence',
-        ids = { 23028, 10157, 10156, 1461, 1460, 1459 }
+        icon = 135932,
+        levels = { 23028, 10157, 10156, 1461, 1460, 1459 }
     }
 }
 
