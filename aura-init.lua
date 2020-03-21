@@ -32,47 +32,8 @@ local function AuraIsInDebug()
     return aura_env.config.internal.debug
 end
 
-local function NormalizeUnit(unit)
-    local function Normalize(unit)
-        if IsInRaid() then 
-            if unit:find('^raid%d+') then 
-                return unit
-            end
-            
-            local raid_index = UnitInRaid(unit)
-            if raid_index and UnitIsPlayer(unit) then
-                return 'raid'..tostring(raid_index)
-            end
-        else
-            if unit == 'player' then
-                return unit
-            end
-            
-            if IsInGroup() then
-                if unit:find('^party%d+') then 
-                    return unit
-                end
-                
-                -- Iterate over party members only --
-                for member in WA_IterateGroupMembers(true) do
-                    if UnitIsUnit(unit, member) then
-                        return member
-                    end
-                end
-            end
-        end
-        return nil
-    end
-    
-    local normalized_unit = Normalize(unit)
-    if aura_env.helpers.AuraIsInDebug() then
-        if normalized_unit then
-            print('HELPER: ('..unit..') was normalized to ('..normalized_unit..')')
-        else
-            print('HELPER: ('..unit..') was\'t normalized')
-        end
-    end
-    return normalized_unit
+local function UnitNameSafe(unit)
+    return UnitName(unit) or '<unknown>'
 end
 
 local function GetFrameAuraKey(aura)
@@ -105,6 +66,9 @@ local function Fade(frame, id)
     end
     LCG.PixelGlow_Stop(frame, id)
 end
+
+-- Customized version of User-defined wait function
+-- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
 local WaitQueue = { };
 local WaitQueueFrame = nil;
@@ -140,7 +104,7 @@ aura_env.helpers.Glow = Glow
 aura_env.helpers.Fade = Fade
 
 aura_env.helpers.AuraIsInDebug = AuraIsInDebug
-aura_env.helpers.NormalizeUnit = NormalizeUnit
+aura_env.helpers.UnitNameSafe = UnitNameSafe
 aura_env.helpers.GetFrameAuraKey = GetFrameAuraKey
 
 -- RUNTIME CONFIGURATION --
@@ -181,17 +145,17 @@ aura_env.runtime = {
 local function UnitMatchAuraActivationRules(unit, aura_name)
     local name = nil
     if aura_env.helpers.AuraIsInDebug() then
-        name = UnitName(unit)
+        name = aura_env.helpers.UnitNameSafe(unit)
     end
     
     -- CORE RULE
-    if ((unit ~= 'player') or (IsInRaid() and unit == 'player')) and not unit:find('^raid%d+') and not unit:find('^party%d+') then
+    if (IsInRaid() and not unit:find('^raid%d+')) or (unit ~= 'player' and not unit:find('^party%d+')) then
         if aura_env.helpers.AuraIsInDebug() then
-            print('HELPER: '..name..' ('..unit..') isn\'t player (or player but in raid), party or raid member')
+            print('HELPER: '..name..' ('..unit..') doesn\'t match party or raid context.')
         end
         return false
     end
-    
+
     -- CLASS RULES
     local aura_config = aura_env.runtime.config.auras[aura_name]
 
@@ -254,12 +218,23 @@ local function UnitGlowAura(unit, aura_name)
 end
 
 local function UnitGlowAllAuras(unit, aura_result)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        for aura_name, aura_match in pairs(aura_result) do
-            if not aura_match then
-                aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
+    local frame = nil
+    for aura_name, aura_match in pairs(aura_result) do
+        if not aura_match then
+            if not frame then 
+                -- Lazely initialize frame
+                -- This can save cycles because inside this function
+                -- we don't really know if we would need to update frame
+                -- graphics
+                -- 
+                -- Example case: when leaving combat
+                frame = aura_env.runtime.helpers.GetFrame(unit)
+                if not frame then
+                    break
+                end
             end
+
+            aura_env.helpers.Glow(frame, aura_env.helpers.GetFrameAuraKey(aura_name))
         end
     end
 end
@@ -309,16 +284,12 @@ local function GetFrames(target)
                 local unit = frame:GetAttribute('unit')
                 if unit and frame:IsVisible() and frame:GetName() then
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..')')
+                        print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..'), caching')
                     end
 
-                    if UnitIsUnit(unit, target) then
-                        if aura_env.helpers.AuraIsInDebug() then
-                            print('HELPER: Caching frame ('..frame:GetName()..') for unit ('..unit..')')
-                        end
+                    aura_env.runtime.frames[frame] = unit
 
-                        aura_env.runtime.frames[frame] = unit
-                        
+                    if UnitIsUnit(unit, target) then
                         tinsert(results, frame)
                     end
                 end
@@ -355,12 +326,12 @@ end
 
 local function GetFrame(target)
     if aura_env.helpers.AuraIsInDebug() then
-        local name = UnitName(target)
+        local name = aura_env.helpers.UnitNameSafe(target)
         print('HELPER: Framing '..name..' ('..target..')')
     end
     local frames = GetFrames(target)
     if not frames then return nil end
-    for i=1,#frame_priority do
+    for i=1, #frame_priority do
         for _,frame in pairs(frames) do
             if (frame:GetName()):find(frame_priority[i]) then
                 return frame
@@ -368,7 +339,7 @@ local function GetFrame(target)
         end
     end
     if aura_env.helpers.AuraIsInDebug() then
-        local name = UnitName(target)
+        local name = aura_env.helpers.UnitNameSafe(target)
         print('HELPER: '..name..' ('..target..') frame not found')
     end
     return nil
