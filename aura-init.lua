@@ -1,5 +1,20 @@
 -- CONFIGURATION MAPPINGS --
 
+-- aura_config = {
+--   classes = {
+--     [0-9] = true / false
+--   }
+--   glow = {
+--     count 
+--     speed 
+--     length
+--     thickness
+--     xoffset 
+--     yoffset 
+--     path
+--   } 
+-- }
+
 local auras_to_blizzard_auras = {
     [1] = {
         name = 'arcane-intellegence',
@@ -43,29 +58,29 @@ end
 
 local LCG = LibStub("LibCustomGlow-1.0")
 
-local function Glow(frame, id) 
+local function Glow(frame, aura_config) 
     if aura_env.helpers.AuraIsInDebug() then
-        print('HELPER: Glowing frame ('..frame:GetName()..'), id ('..id..')')
+        print('HELPER: Glowing frame ('..frame:GetName()..'), id ('..aura_config.id..')')
     end
     LCG.PixelGlow_Start(
         frame, 
-        aura_env.config.glow.color, 
-        aura_env.config.glow.count, 
-        aura_env.config.glow.speed, 
-        nil, 
-        aura_env.config.glow.thickness, 
-        aura_env.config.glow.xoffset, 
-        aura_env.config.glow.yoffset, 
-        aura_env.config.glow.path, 
-        id
+        aura_config.glow.color, 
+        aura_config.glow.count, 
+        aura_config.glow.speed, 
+        aura_config.glow.length, 
+        aura_config.glow.thickness, 
+        aura_config.glow.xoffset, 
+        aura_config.glow.yoffset, 
+        aura_config.glow.path, 
+        aura_config.id
     )
 end
 
-local function Fade(frame, id)
+local function Fade(frame, aura_config)
     if aura_env.helpers.AuraIsInDebug() then
-        print('HELPER: Fading frame ('..frame:GetName()..'), id ('..id..')')
+        print('HELPER: Fading frame ('..frame:GetName()..'), id ('..aura_config.id..')')
     end
-    LCG.PixelGlow_Stop(frame, id)
+    LCG.PixelGlow_Stop(frame, aura_config.id)
 end
 
 -- Customized version of User-defined wait function
@@ -123,11 +138,6 @@ local frame_priority = {
 
 aura_env.runtime = {
     config = {
-        classes ={
-        },
-        auras = {
-            ['arcane-intellegence'] = { 23028, 10157, 10156, 1461, 1460, 1459 }
-        }
     },
     helpers = {
     },
@@ -369,16 +379,28 @@ if aura_env.helpers.AuraIsInDebug() then
 end
 
 for _, aura_config in pairs(aura_env.config.auras) do
-    local blizzard_aura = auras_to_blizzard_auras[aura_config.aura]
+    local blizzard_aura = auras_to_blizzard_auras[aura_config.key]
     if blizzard_aura then
         local aura_name = blizzard_aura.name
         if aura_env.helpers.AuraIsInDebug() then
             print('Enabling tracking of : '..aura_name..' aura')
         end
 
-        aura_env.runtime.config[aura_name] = {
-            ids = blizzard_aura.ids,
-            classes = { }
+        local runtime_aura_config = {
+            id = aura_env.helpers.GetFrameAuraKey(aura_name),
+            icon = blizzard_aura.icon,
+            levels = blizzard_aura.levels,
+            classes = { },
+            glow = { 
+                aura_config.glow.color, 
+                aura_config.glow.count, 
+                aura_config.glow.speed, 
+                aura_config.glow.length, 
+                aura_config.glow.thickness, 
+                aura_config.glow.xoffset, 
+                aura_config.glow.yoffset, 
+                aura_config.glow.path
+            }
         }
 
         for class, enabled in ipairs(aura_config.classes) do
@@ -387,7 +409,9 @@ for _, aura_config in pairs(aura_env.config.auras) do
                 print('- Tracking : '..blizzard_class..' class')
             end
             
-            aura_env.runtime.config[aura_name].classes[blizzard_class] = enabled   
+            runtime_aura_config.classes[blizzard_class] = enabled   
         end
+
+        aura_env.runtime.config[aura_name] = runtime_aura_config
     end
 end
