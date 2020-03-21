@@ -142,7 +142,8 @@ local function UnitMatchAuraActivationRules(unit)
     end
     
     -- CORE RULE
-    if (IsInRaid() and not unit:find('^raid%d+')) or (unit ~= 'player' and not unit:find('^party%d+')) then
+    local in_raid = IsInRaid()
+    if (in_raid and not unit:find('^raid%d+')) or (not in_raid and unit ~= 'player' and not unit:find('^party%d+')) then
         if aura_env.helpers.AuraIsInDebug() then
             print('HELPER: '..name..' ('..unit..') doesn\'t match party or raid context.')
         end
