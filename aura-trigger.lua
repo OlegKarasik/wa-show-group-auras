@@ -209,14 +209,14 @@ function(allstates, event, unit)
                     if state then
                         if not state.units[unit] then
                             if aura_env.helpers.AuraIsInDebug() then
-                                print('TRIGGER: '..name..' ('..unit..') has aura, state found, no changes, skipping') 
+                                print('TRIGGER: '..name..' ('..unit..') has \''..aura_name..'\', state found, no changes, skipping') 
                             end
                             
                             break
                         end
                         
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..unit..') has aura, state found, marking') 
+                            print('TRIGGER: '..name..' ('..unit..') has \''..aura_name..'\', state found, marking') 
                         end
                         
                         state.show = state.matchCount > 1
@@ -226,7 +226,7 @@ function(allstates, event, unit)
                         state.units[unit] = false
                     else
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..unit..') has aura, state not found, skipping')
+                            print('TRIGGER: '..name..' ('..unit..') has \''..aura_name..'\', state not found, skipping')
                         end
                         
                         -- Just do nothing and proceed to next aura
@@ -251,14 +251,14 @@ function(allstates, event, unit)
                 if state then
                     if state.units[unit] then
                         if aura_env.helpers.AuraIsInDebug() then
-                            print('TRIGGER: '..name..' ('..unit..') has no aura, state found, no changes, skipping')
+                            print('TRIGGER: '..name..' ('..unit..') has no \''..aura_name..'\', state found, no changes, skipping')
                         end
                         
                         break
                     end
                     
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('TRIGGER: '..name..' ('..unit..') has no aura, state found, marking')
+                        print('TRIGGER: '..name..' ('..unit..') has no \''..aura_name..'\', state found, marking')
                     end
                     
                     state.show = true
@@ -268,7 +268,7 @@ function(allstates, event, unit)
                     state.units[unit] = true
                 else
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('TRIGGER: '..name..' ('..unit..') has no aura, state not found, marking')
+                        print('TRIGGER: '..name..' ('..unit..') has no \''..aura_name..'\', state not found, marking')
                     end
                     
                     allstates[aura_name] = {
