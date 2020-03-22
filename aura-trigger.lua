@@ -3,6 +3,7 @@ function(allstates, event, unit)
         for aura_name, aura_result in pairs(aura_results) do
             if not states[aura_name] then
                 states[aura_name] = {
+                    icon = aura_result.config.icon,
                     matchCount = 0,
                     units = { 
                     }
@@ -220,6 +221,7 @@ function(allstates, event, unit)
                         
                         state.show = state.matchCount > 1
                         state.changed = true
+                        state.icon = aura_result.config.icon
                         state.matchCount = state.matchCount - 1
                         state.units[unit] = false
                     else
@@ -261,6 +263,7 @@ function(allstates, event, unit)
                     
                     state.show = true
                     state.changed = true
+                    state.icon = aura_result.config.icon
                     state.matchCount = state.matchCount + 1
                     state.units[unit] = true
                 else
@@ -271,6 +274,7 @@ function(allstates, event, unit)
                     allstates[aura_name] = {
                         show = true,
                         changed = true,
+                        icon = aura_result.config.icon,
                         matchCount = 1,
                         units = {
                             [unit] = true
