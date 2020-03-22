@@ -1,6 +1,6 @@
 function(allstates, event, unit)
-    local function UpdateUnitAuraStates(states, unit, aura_result)
-        for aura_name, aura_match in pairs(aura_result) do
+    local function UpdateUnitAuraStates(states, unit, aura_results)
+        for aura_name, aura_result in pairs(aura_results) do
             if not states[aura_name] then
                 states[aura_name] = {
                     matchCount = 0,
@@ -8,10 +8,10 @@ function(allstates, event, unit)
                     }
                 }
             end
-            if not aura_match then
+            if not aura_result.match then
                 states[aura_name].matchCount = states[aura_name].matchCount + 1
             end
-            states[aura_name].units[unit] = not aura_match
+            states[aura_name].units[unit] = not aura_result.match
         end
     end
     if event == 'GROUP_ROSTER_UPDATE' then
@@ -29,23 +29,20 @@ function(allstates, event, unit)
         -- Initialize empty auras states
         local states = { }
         
-        -- Iterate over raid or party restoring auras states and glows
-        -- aura_results is used to store visualization information for 
-        -- each normalized unit
-
-        local aura_results = { }
+        -- Iterate over raid or party restoring auras states for each unit
+        local unit_results = { }
         
         for unit in WA_IterateGroupMembers() do
-            -- Include unit into aura_results
-            aura_results[unit] = { }
+            -- Include unit into unit_results
+            unit_results[unit] = { }
 
             if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
-                local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
 
-                UpdateUnitAuraStates(states, unit, aura_result)
+                UpdateUnitAuraStates(states, unit, aura_results)
 
-                -- Set unit aura result
-                aura_results[unit] = aura_result
+                -- Set unit aura results
+                unit_results[unit] = aura_results
             end
         end
 
@@ -59,9 +56,9 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for unit, aura_result in pairs(aura_results) do
+                for unit, aura_results in pairs(unit_results) do
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit)
-                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_result)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_results)
                 end
             end)
         --
@@ -86,19 +83,18 @@ function(allstates, event, unit)
         end
 
         -- Iterate over the states and 
-        -- include all units with auras to fade
-        -- table
+        -- include all units with auras to fade table
 
-        local units = { }
+        local units_to_fade = { }
         
         for aura_name, state in pairs(allstates) do
             for unit, match in pairs(state.units) do
                 if match then
-                    units[unit] = true
+                    units_to_fade[unit] = true
                 end
             end
             
-            -- Deactivate aura
+            -- Deactivate
             state.show = false
             state.changed = true
         end
@@ -113,7 +109,7 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for unit in pairs(units) do
+                for unit in pairs(units_to_fade) do
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit)
                 end
             end)
@@ -134,24 +130,21 @@ function(allstates, event, unit)
 
         -- Initialize empty auras states
         local states = { }
-        
-        -- Iterate over raid or party restoring auras states and glows
-        -- aura_results is used to store visualization information for 
-        -- each normalized unit
 
-        local aura_results = { }
+        -- Iterate over raid or party restoring auras states for each unit
+        local unit_results = { }
         
         for unit in WA_IterateGroupMembers() do
-            -- Include unit into aura_results
-            aura_results[unit] = { }
+            -- Include unit into unit_results
+            unit_results[unit] = { }
 
             if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
-                local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
 
-                UpdateUnitAuraStates(states, unit, aura_result)
+                UpdateUnitAuraStates(states, unit, aura_results)
 
-                -- Set unit aura result
-                aura_results[unit] = aura_result
+                -- Set unit aura results
+                unit_results[unit] = aura_results
             end
         end
 
@@ -165,10 +158,9 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for unit, aura_result in pairs(aura_results) do
-                    -- If we process enter / leave combat events sequence then
-                    -- all unit auras were already faded (on enter)
-                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_result)
+                for unit, aura_results in pairs(unit_results) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_results)
                 end
             end)
         --
@@ -180,7 +172,7 @@ function(allstates, event, unit)
 
             allstates[aura_name] = state
         end
-        
+
         aura_env.runtime.helpers.LeaveCombat()
         
         return true
@@ -208,11 +200,11 @@ function(allstates, event, unit)
 
         local result = false
 
-        local aura_result = aura_env.runtime.helpers.UnitHasAuras(unit)
-        for aura_name, aura_match in pairs(aura_result) do
+        local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+        for aura_name, aura_result in pairs(aura_results) do
             local state = allstates[aura_name]
             repeat
-                if aura_match then
+                if aura_result.match then
                     if state then
                         if not state.units[unit] then
                             if aura_env.helpers.AuraIsInDebug() then
@@ -246,7 +238,7 @@ function(allstates, event, unit)
                         function ()
                             if not aura_env then aura_env = capture_aura_env end
 
-                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_name)
+                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
                         end)
                     --
 
@@ -292,7 +284,7 @@ function(allstates, event, unit)
                     function ()
                         if not aura_env then aura_env = capture_aura_env end
 
-                        aura_env.runtime.helpers.UnitGlowAura(unit, aura_name)
+                        aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
                     end)
                 --
 
