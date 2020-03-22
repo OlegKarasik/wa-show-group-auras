@@ -412,14 +412,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             levels = blizzard_aura.levels,
             classes = { },
             glow = { 
-                aura_config.glow.color, 
-                aura_config.glow.count, 
-                aura_config.glow.speed, 
-                aura_config.glow.length, 
-                aura_config.glow.thickness, 
-                aura_config.glow.xoffset, 
-                aura_config.glow.yoffset, 
-                aura_config.glow.path
+                color     = aura_config.glow.color, 
+                count     = aura_config.glow.count, 
+                speed     = aura_config.glow.speed, 
+                length    = aura_config.glow.length, 
+                thickness = aura_config.glow.thickness, 
+                xoffset   = aura_config.glow.xoffset, 
+                yoffset   = aura_config.glow.yoffset, 
+                path      = aura_config.glow.path
             }
         }
 
