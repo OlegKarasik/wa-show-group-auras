@@ -17,9 +17,24 @@
 
 local auras_to_blizzard_auras = {
     [1] = {
-        name = 'arcane-intellegence',
+        name = 'arcane-intellect',
         icon = 135932,
         levels = { 23028, 10157, 10156, 1461, 1460, 1459 }
+    },
+    [2] = {
+        name = 'divine-spirit',
+        icon = 135898,
+        levels = { 27681, 27841, 14819, 14818, 14752 }
+    },
+    [3] = {
+        name = 'power-word-fortitude',
+        icon = 135987,
+        levels = { 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243}
+    },
+    [4] = {
+        name = 'shadow-protection',
+        icon = 136121,
+        levels = { 27683, 10958, 10957, 976}
     }
 }
 
