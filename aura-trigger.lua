@@ -235,13 +235,7 @@ function(allstates, event, unit)
                     end
 
                     -- Visual Update
-                    local capture_aura_env = aura_env;
-                    aura_env.helpers.DelayExecution(
-                        function ()
-                            if not aura_env then aura_env = capture_aura_env end
-
-                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
-                        end)
+                    aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config, false)
                     --
 
                     result = true
