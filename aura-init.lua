@@ -72,10 +72,6 @@ local function UnitNameSafe(unit)
     return UnitName(unit) or '<unknown>'
 end
 
-local function GetFrameAuraKey(aura)
-    return 'aura:'..aura
-end
-
 local LCG = LibStub("LibCustomGlow-1.0")
 
 local function Glow(frame, aura_config) 
@@ -141,7 +137,6 @@ aura_env.helpers.Fade = Fade
 
 aura_env.helpers.AuraIsInDebug = AuraIsInDebug
 aura_env.helpers.UnitNameSafe = UnitNameSafe
-aura_env.helpers.GetFrameAuraKey = GetFrameAuraKey
 
 -- RUNTIME CONFIGURATION --
 
@@ -412,7 +407,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         end
 
         local runtime_aura_config = {
-            id = aura_env.helpers.GetFrameAuraKey(aura_name),
+            id = 'aura:'..aura_name,
             icon = blizzard_aura.icon,
             levels = blizzard_aura.levels,
             classes = { },
