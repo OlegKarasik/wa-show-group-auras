@@ -192,7 +192,7 @@ end
 local function UnitHasAuras(unit)
     local results = { }
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
-        for _, level in pairs(aura_config.levels) do
+        for _, level in ipairs(aura_config.levels) do
             local name = WA_GetUnitAura(unit, level)
             if name then
                 results[aura_name] = {
@@ -291,8 +291,8 @@ local function GetFrames(target)
         if type(frame) == 'table' and not frame:IsForbidden() then
             local type = frame:GetObjectType()
             if type == 'Frame' or type == 'Button' then
-                for _,child in ipairs({frame:GetChildren()}) do
-                    for _,v in pairs(FindButtonsForUnit(child, target)) do
+                for _, child in ipairs({frame:GetChildren()}) do
+                    for _, v in pairs(FindButtonsForUnit(child, target)) do
                         tinsert(results, v)
                     end
                 end
@@ -348,8 +348,8 @@ local function GetFrame(target)
     end
     local frames = GetFrames(target)
     if not frames then return nil end
-    for i=1, #frame_priority do
-        for _,frame in pairs(frames) do
+    for i = 1, #frame_priority do
+        for _, frame in pairs(frames) do
             if (frame:GetName()):find(frame_priority[i]) then
                 return frame
             end
@@ -383,7 +383,7 @@ if aura_env.helpers.AuraIsInDebug() then
     print('Aura version: 0.1')
 end
 
-for _, aura_config in pairs(aura_env.config.auras) do
+for _, aura_config in ipairs(aura_env.config.auras) do
     local blizzard_aura = auras_to_blizzard_auras[aura_config.name]
     if blizzard_aura then
         local aura_name = blizzard_aura.name
@@ -408,7 +408,7 @@ for _, aura_config in pairs(aura_env.config.auras) do
             }
         }
 
-        for index, enabled in pairs(aura_config.classes) do
+        for index, enabled in ipairs(aura_config.classes) do
             local blizzard_class = classes_to_blizzard_classes[index]
             if aura_env.helpers.AuraIsInDebug() and enabled then
                 print('- Tracking : '..blizzard_class..' class')
