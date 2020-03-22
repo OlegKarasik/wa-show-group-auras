@@ -161,7 +161,6 @@ aura_env.runtime = {
     combat = false
 }
 
-
 -- RUNTIME HELPERS --
 
 -- Runtime helpers encapsulate stateless functions
@@ -227,10 +226,28 @@ local function UnitHasAuras(unit)
     return results
 end
 
-local function UnitFadeAura(unit, aura_config)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        aura_env.helpers.Fade(frame, aura_config)
+local function UnitFadeAura(unit, aura_config, clear_cache)
+    if aura_config.glow.enable then 
+
+        -- Capture global aura_env variable
+        local capture_aura_env = aura_env;
+
+        -- Delay visualization
+        aura_env.helpers.DelayExecution(
+            function ()
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+
+                if clear_cache then 
+                    aura_env.runtime.helpers.ClearFrameCache()
+                end
+
+                local frame = aura_env.runtime.helpers.GetFrame(unit)
+                if frame then
+                    aura_env.helpers.Fade(frame, aura_config)
+                end
+            end)
     end
 end
 
@@ -243,10 +260,28 @@ local function UnitFadeAllAuras(unit)
     end
 end
 
-local function UnitGlowAura(unit, aura_config)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        aura_env.helpers.Glow(frame, aura_config)
+local function UnitGlowAura(unit, aura_config, clear_cache)
+    if aura_config.glow.enable then 
+
+        -- Capture global aura_env variable
+        local capture_aura_env = aura_env;
+
+        -- Delay visualization
+        aura_env.helpers.DelayExecution(
+            function ()
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+
+                if clear_cache then 
+                    aura_env.runtime.helpers.ClearFrameCache()
+                end
+
+                local frame = aura_env.runtime.helpers.GetFrame(unit)
+                if frame then
+                    aura_env.helpers.Glow(frame, aura_config)
+                end
+            end)
     end
 end
 
@@ -412,6 +447,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             levels = blizzard_aura.levels,
             classes = { },
             glow = { 
+                aura_config.glow.enable,
                 aura_config.glow.color, 
                 aura_config.glow.count, 
                 aura_config.glow.speed, 
