@@ -27,11 +27,16 @@ local auras_to_blizzard_auras = {
         levels = { 27681, 27841, 14819, 14818, 14752 }
     },
     [3] = {
+        name = 'mark-of-the-wild',
+        icon = 136078,
+        levels = { 21850, 21849, 9885, 9884, 8907, 5234, 6756, 5232, 1126 }
+    },
+    [4] = {
         name = 'power-word-fortitude',
         icon = 135987,
         levels = { 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243}
     },
-    [4] = {
+    [5] = {
         name = 'shadow-protection',
         icon = 136121,
         levels = { 27683, 10958, 10957, 976}
