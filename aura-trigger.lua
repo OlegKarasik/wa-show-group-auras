@@ -48,13 +48,8 @@ function(allstates, event, unit)
         end
 
         -- Visual Update
-        local capture_aura_env = aura_env;
         aura_env.helpers.DelayExecution(
             function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit, aura_results in pairs(unit_results) do
@@ -85,7 +80,6 @@ function(allstates, event, unit)
 
         -- Iterate over the states and 
         -- include all units with auras to fade table
-
         local units_to_fade = { }
         
         for aura_name, state in pairs(allstates) do
@@ -101,13 +95,8 @@ function(allstates, event, unit)
         end
 
         -- Visual Update
-        local capture_aura_env = aura_env;
         aura_env.helpers.DelayExecution(
             function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit in pairs(units_to_fade) do
@@ -150,13 +139,8 @@ function(allstates, event, unit)
         end
 
         -- Visual Update
-        local capture_aura_env = aura_env;
         aura_env.helpers.DelayExecution(
             function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit, aura_results in pairs(unit_results) do
@@ -230,12 +214,14 @@ function(allstates, event, unit)
                         end
                         
                         -- Just do nothing and proceed to next aura
-
                         break
                     end
 
                     -- Visual Update
-                    aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config, false)
+                    aura_env.helpers.DelayExecution(
+                        function ()
+                            aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
+                        end)
                     --
 
                     result = true
@@ -277,7 +263,10 @@ function(allstates, event, unit)
                 end
 
                 -- Visual Update
-                aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config, false)
+                aura_env.helpers.DelayExecution(
+                    function ()
+                        aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
+                    end)
                 --
 
                 result = true

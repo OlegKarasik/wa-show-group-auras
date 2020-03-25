@@ -108,11 +108,17 @@ local WaitQueueFrame = nil;
 local WaitClosure = aura_env
 
 local function DelayExecution(f)
+    local capture_aura_env = aura_env;
+
     if not WaitQueueFrame then
         WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent);
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+                
                 local count = #WaitQueue;
 
                 local i = 1;
@@ -226,69 +232,43 @@ local function UnitHasAuras(unit)
     return results
 end
 
-local function UnitFadeAura(unit, aura_config, clear_cache)
+local function UnitFadeAura(unit, aura_config)
     if aura_config.glow.enable then 
-
-        -- Capture global aura_env variable
-        local capture_aura_env = aura_env;
-
-        -- Delay visualization
-        aura_env.helpers.DelayExecution(
-            function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
-                if clear_cache then 
-                    aura_env.runtime.helpers.ClearFrameCache()
-                end
-
-                local frame = aura_env.runtime.helpers.GetFrame(unit)
-                if frame then
-                    aura_env.helpers.Fade(frame, aura_config)
-                end
-            end)
-    end
-end
-
-local function UnitFadeAllAuras(unit)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        for aura_name, aura_config in pairs(aura_env.runtime.config) do
+        local frame = aura_env.runtime.helpers.GetFrame(unit)
+        if frame then
             aura_env.helpers.Fade(frame, aura_config)
         end
     end
 end
 
-local function UnitGlowAura(unit, aura_config, clear_cache)
+local function UnitFadeAllAuras(unit)
+    local frame = nil
+    for aura_name, aura_config in pairs(aura_env.runtime.config) do
+        if aura_config.glow.enable then
+            if not frame then 
+                frame = aura_env.runtime.helpers.GetFrame(unit)
+                if not frame then
+                    break
+                end
+            end
+            aura_env.helpers.Fade(frame, aura_config)
+        end
+    end
+end
+
+local function UnitGlowAura(unit, aura_config)
     if aura_config.glow.enable then 
-
-        -- Capture global aura_env variable
-        local capture_aura_env = aura_env;
-
-        -- Delay visualization
-        aura_env.helpers.DelayExecution(
-            function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
-                if clear_cache then 
-                    aura_env.runtime.helpers.ClearFrameCache()
-                end
-
-                local frame = aura_env.runtime.helpers.GetFrame(unit)
-                if frame then
-                    aura_env.helpers.Glow(frame, aura_config)
-                end
-            end)
+        local frame = aura_env.runtime.helpers.GetFrame(unit)
+        if frame then
+            aura_env.helpers.Glow(frame, aura_config)
+        end
     end
 end
 
 local function UnitGlowAllAuras(unit, aura_results)
     local frame = nil
     for aura_name, aura_result in pairs(aura_results) do
-        if not aura_result.match then
+        if aura_result.config.glow.enable and not aura_result.match then
             if not frame then 
                 -- Lazely initialize frame
                 -- This can save cycles because inside this function
