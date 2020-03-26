@@ -185,8 +185,10 @@ local function UnitMatchAuraActivationRules(unit)
         if aura_env.helpers.AuraIsInDebug() then
             print('HELPER: '..name..' ('..unit..') doesn\'t match party or raid context')
         end
-        return false
+        return nil
     end
+
+    local match_result = nil
 
     -- CLASS RULES
     local _, english_class = UnitClass(unit)
@@ -195,7 +197,11 @@ local function UnitMatchAuraActivationRules(unit)
             if aura_env.helpers.AuraIsInDebug() then
                 print('HELPER: '..name..' ('..unit..', '..english_class..') matched \''..aura_name..'\':\'class\' activation rule')
             end
-            return true
+            if not match_result then
+                match_result = { }
+            end
+
+            match_result[aura_name] = true
         end
     end
     
@@ -203,33 +209,44 @@ local function UnitMatchAuraActivationRules(unit)
         english_class = 'UNKNOWN'
     end
     
-    if aura_env.helpers.AuraIsInDebug() then
+    if not match_result and aura_env.helpers.AuraIsInDebug() then
         print('HELPER: '..name..' ('..unit..', '..english_class..') doesn\'t match activation rules')
     end
-    return false
+    return match_result
 end
 
-local function UnitHasAuras(unit)
-    local results = { }
+local function UnitHasAuras(unit, match_result)
+    local name = nil
+    if aura_env.helpers.AuraIsInDebug() then
+        name = aura_env.helpers.UnitNameSafe(unit)
+    end
+
+    local aura_result = { }
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
-        for _, level in ipairs(aura_config.levels) do
-            local name = WA_GetUnitAura(unit, level)
-            if name then
-                results[aura_name] = {
-                    match = true,
+        if match_result[aura_name] then 
+            for _, level in ipairs(aura_config.levels) do
+                local name = WA_GetUnitAura(unit, level)
+                if name then
+                    if aura_env.helpers.AuraIsInDebug() then
+                        print('HELPER: '..name..' ('..unit..') has '..name..' aura')
+                    end
+
+                    aura_result[aura_name] = {
+                        match = true,
+                        config = aura_config
+                    }
+                    break
+                end
+            end
+            if not aura_result[aura_name] then
+                aura_result[aura_name] = {
+                    match = false,
                     config = aura_config
                 }
-                break
             end
         end
-        if not results[aura_name] then
-            results[aura_name] = {
-                match = false,
-                config = aura_config
-            }
-        end
     end
-    return results
+    return aura_result
 end
 
 local function UnitFadeAura(unit, aura_config)

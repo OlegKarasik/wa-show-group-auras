@@ -37,8 +37,10 @@ function(allstates, event, unit)
             -- Include unit into unit_results
             unit_results[unit] = { }
 
-            if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+            -- Find out whether unit matches any of the aura rules
+            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+            if match_result then 
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
 
                 UpdateUnitAuraStates(states, unit, aura_results)
 
@@ -128,8 +130,10 @@ function(allstates, event, unit)
             -- Include unit into unit_results
             unit_results[unit] = { }
 
-            if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+            -- Find out whether unit matches any of the aura rules
+            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+            if match_result then 
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
 
                 UpdateUnitAuraStates(states, unit, aura_results)
 
@@ -174,7 +178,8 @@ function(allstates, event, unit)
             return false
         end
         
-        if not aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
+        local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+        if not match_result then
             return false
         end
         
@@ -185,7 +190,7 @@ function(allstates, event, unit)
 
         local result = false
 
-        local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+        local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
         for aura_name, aura_result in pairs(aura_results) do
             local state = allstates[aura_name]
             repeat
