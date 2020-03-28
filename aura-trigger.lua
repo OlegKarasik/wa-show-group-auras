@@ -15,6 +15,28 @@ function(allstates, event, unit)
             states[aura_name].units[unit] = not aura_result.match
         end
     end
+    if event == 'OPTIONS' then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('TRIGGER: OPTIONS')
+        end
+        -- We aren't deferring this execution to a frame
+        -- event loop because we actually don't expect dynamic
+        -- changes here
+
+        -- Clear the cache
+        aura_env.runtime.helpers.ClearFrameCache()
+
+        -- Iterate over raid or party and clear all possible auras
+        -- This is required to enable "aura enable / disable functionality"
+        for unit in WA_IterateGroupMembers() do
+            for aura_name, aura_config in pairs(aura_env.runtime.config) do
+                local frame = aura_env.runtime.helpers.GetFrame(unit)
+                if frame then
+                    aura_env.helpers.Fade(frame, aura_config)
+                end
+            end
+        end
+    end
     if event == 'GROUP_ROSTER_UPDATE' then
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: GROUP_ROSTER_UPDATE')
