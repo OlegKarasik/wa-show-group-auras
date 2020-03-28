@@ -103,12 +103,13 @@ end
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
 local WaitQueue = { };
-local WaitQueueFrame = nil;
-
 local WaitClosure = aura_env
 
 local function DelayExecution(f)
     local capture_aura_env = aura_env;
+
+    -- WaitQueueFrame is a global variable
+    -- It is required to reuse the same frame
 
     if not WaitQueueFrame then
         WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent);
