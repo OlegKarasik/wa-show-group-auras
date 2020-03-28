@@ -15,6 +15,28 @@ function(allstates, event, unit)
             states[aura_name].units[unit] = not aura_result.match
         end
     end
+    if event == 'OPTIONS' then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('TRIGGER: OPTIONS')
+        end
+        -- We aren't deferring this execution to a frame
+        -- event loop because we actually don't expect dynamic
+        -- changes here
+
+        -- Clear the cache
+        aura_env.runtime.helpers.ClearFrameCache()
+
+        -- Iterate over raid or party and clear all possible auras
+        -- This is required to enable "aura enable / disable functionality"
+        for unit in WA_IterateGroupMembers() do
+            for aura_name, aura_config in pairs(aura_env.runtime.config) do
+                local frame = aura_env.runtime.helpers.GetFrame(unit)
+                if frame then
+                    aura_env.helpers.Fade(frame, aura_config)
+                end
+            end
+        end
+    end
     if event == 'GROUP_ROSTER_UPDATE' then
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: GROUP_ROSTER_UPDATE')
@@ -37,8 +59,10 @@ function(allstates, event, unit)
             -- Include unit into unit_results
             unit_results[unit] = { }
 
-            if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+            -- Find out whether unit matches any of the aura rules
+            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+            if match_result then 
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
 
                 UpdateUnitAuraStates(states, unit, aura_results)
 
@@ -48,13 +72,8 @@ function(allstates, event, unit)
         end
 
         -- Visual Update
-        local capture_aura_env = aura_env;
         aura_env.helpers.DelayExecution(
             function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit, aura_results in pairs(unit_results) do
@@ -85,7 +104,6 @@ function(allstates, event, unit)
 
         -- Iterate over the states and 
         -- include all units with auras to fade table
-
         local units_to_fade = { }
         
         for aura_name, state in pairs(allstates) do
@@ -101,13 +119,8 @@ function(allstates, event, unit)
         end
 
         -- Visual Update
-        local capture_aura_env = aura_env;
         aura_env.helpers.DelayExecution(
             function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit in pairs(units_to_fade) do
@@ -139,8 +152,10 @@ function(allstates, event, unit)
             -- Include unit into unit_results
             unit_results[unit] = { }
 
-            if aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+            -- Find out whether unit matches any of the aura rules
+            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+            if match_result then 
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
 
                 UpdateUnitAuraStates(states, unit, aura_results)
 
@@ -150,13 +165,8 @@ function(allstates, event, unit)
         end
 
         -- Visual Update
-        local capture_aura_env = aura_env;
         aura_env.helpers.DelayExecution(
             function ()
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit, aura_results in pairs(unit_results) do
@@ -190,7 +200,8 @@ function(allstates, event, unit)
             return false
         end
         
-        if not aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit) then
+        local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+        if not match_result then
             return false
         end
         
@@ -201,7 +212,7 @@ function(allstates, event, unit)
 
         local result = false
 
-        local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit)
+        local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
         for aura_name, aura_result in pairs(aura_results) do
             local state = allstates[aura_name]
             repeat
@@ -230,16 +241,12 @@ function(allstates, event, unit)
                         end
                         
                         -- Just do nothing and proceed to next aura
-
                         break
                     end
 
                     -- Visual Update
-                    local capture_aura_env = aura_env;
                     aura_env.helpers.DelayExecution(
                         function ()
-                            if not aura_env then aura_env = capture_aura_env end
-
                             aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
                         end)
                     --
@@ -283,11 +290,8 @@ function(allstates, event, unit)
                 end
 
                 -- Visual Update
-                local capture_aura_env = aura_env;
                 aura_env.helpers.DelayExecution(
                     function ()
-                        if not aura_env then aura_env = capture_aura_env end
-
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
                     end)
                 --

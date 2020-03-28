@@ -108,11 +108,17 @@ local WaitQueueFrame = nil;
 local WaitClosure = aura_env
 
 local function DelayExecution(f)
+    local capture_aura_env = aura_env;
+
     if not WaitQueueFrame then
         WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent);
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
+                if not aura_env then 
+                    aura_env = capture_aura_env 
+                end
+                
                 local count = #WaitQueue;
 
                 local i = 1;
@@ -161,7 +167,6 @@ aura_env.runtime = {
     combat = false
 }
 
-
 -- RUNTIME HELPERS --
 
 -- Runtime helpers encapsulate stateless functions
@@ -180,8 +185,10 @@ local function UnitMatchAuraActivationRules(unit)
         if aura_env.helpers.AuraIsInDebug() then
             print('HELPER: '..name..' ('..unit..') doesn\'t match party or raid context')
         end
-        return false
+        return nil
     end
+
+    local match_result = nil
 
     -- CLASS RULES
     local _, english_class = UnitClass(unit)
@@ -190,7 +197,11 @@ local function UnitMatchAuraActivationRules(unit)
             if aura_env.helpers.AuraIsInDebug() then
                 print('HELPER: '..name..' ('..unit..', '..english_class..') matched \''..aura_name..'\':\'class\' activation rule')
             end
-            return true
+            if not match_result then
+                match_result = { }
+            end
+
+            match_result[aura_name] = true
         end
     end
     
@@ -198,62 +209,83 @@ local function UnitMatchAuraActivationRules(unit)
         english_class = 'UNKNOWN'
     end
     
-    if aura_env.helpers.AuraIsInDebug() then
+    if not match_result and aura_env.helpers.AuraIsInDebug() then
         print('HELPER: '..name..' ('..unit..', '..english_class..') doesn\'t match activation rules')
     end
-    return false
+    return match_result
 end
 
-local function UnitHasAuras(unit)
-    local results = { }
+local function UnitHasAuras(unit, match_result)
+    local name = nil
+    if aura_env.helpers.AuraIsInDebug() then
+        name = aura_env.helpers.UnitNameSafe(unit)
+    end
+
+    local aura_result = { }
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
-        for _, level in ipairs(aura_config.levels) do
-            local name = WA_GetUnitAura(unit, level)
-            if name then
-                results[aura_name] = {
-                    match = true,
+        if match_result[aura_name] then 
+            for _, level in ipairs(aura_config.levels) do
+                local name = WA_GetUnitAura(unit, level)
+                if name then
+                    if aura_env.helpers.AuraIsInDebug() then
+                        print('HELPER: '..name..' ('..unit..') has '..name..' aura')
+                    end
+
+                    aura_result[aura_name] = {
+                        match = true,
+                        config = aura_config
+                    }
+                    break
+                end
+            end
+            if not aura_result[aura_name] then
+                aura_result[aura_name] = {
+                    match = false,
                     config = aura_config
                 }
-                break
             end
         end
-        if not results[aura_name] then
-            results[aura_name] = {
-                match = false,
-                config = aura_config
-            }
-        end
     end
-    return results
+    return aura_result
 end
 
 local function UnitFadeAura(unit, aura_config)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        aura_env.helpers.Fade(frame, aura_config)
+    if aura_config.glow.enable then 
+        local frame = aura_env.runtime.helpers.GetFrame(unit)
+        if frame then
+            aura_env.helpers.Fade(frame, aura_config)
+        end
     end
 end
 
 local function UnitFadeAllAuras(unit)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        for aura_name, aura_config in pairs(aura_env.runtime.config) do
+    local frame = nil
+    for aura_name, aura_config in pairs(aura_env.runtime.config) do
+        if aura_config.glow.enable then
+            if not frame then 
+                frame = aura_env.runtime.helpers.GetFrame(unit)
+                if not frame then
+                    break
+                end
+            end
             aura_env.helpers.Fade(frame, aura_config)
         end
     end
 end
 
 local function UnitGlowAura(unit, aura_config)
-    local frame = aura_env.runtime.helpers.GetFrame(unit)
-    if frame then
-        aura_env.helpers.Glow(frame, aura_config)
+    if aura_config.glow.enable then 
+        local frame = aura_env.runtime.helpers.GetFrame(unit)
+        if frame then
+            aura_env.helpers.Glow(frame, aura_config)
+        end
     end
 end
 
 local function UnitGlowAllAuras(unit, aura_results)
     local frame = nil
     for aura_name, aura_result in pairs(aura_results) do
-        if not aura_result.match then
+        if aura_result.config.glow.enable and not aura_result.match then
             if not frame then 
                 -- Lazely initialize frame
                 -- This can save cycles because inside this function
@@ -412,6 +444,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             levels = blizzard_aura.levels,
             classes = { },
             glow = { 
+                enable    = aura_config.glow.enable,
                 color     = aura_config.glow.color, 
                 count     = aura_config.glow.count, 
                 speed     = aura_config.glow.speed, 
