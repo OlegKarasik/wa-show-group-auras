@@ -102,17 +102,17 @@ end
 -- Customized version of User-defined wait function
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
-local WaitQueue = { };
+local WaitQueue = { }
 local WaitClosure = aura_env
 
 local function DelayExecution(f)
-    local capture_aura_env = aura_env;
-
+    local capture_aura_env = aura_env
+    
     -- WaitQueueFrame is a global variable
     -- It is required to reuse the same frame
-
+    
     if not WaitQueueFrame then
-        WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent);
+        WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent)
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
@@ -120,21 +120,21 @@ local function DelayExecution(f)
                     aura_env = capture_aura_env 
                 end
                 
-                local count = #WaitQueue;
-
-                local i = 1;
+                local count = #WaitQueue
+                
+                local i = 1
                 while i <= count do
-                    local fn = tremove(WaitQueue, i);
+                    local fn = tremove(WaitQueue, i)
                     if fn then 
                         fn()
                     end
                     i = i + 1
                 end
-            end);
+        end)
     end
-
-    tinsert(WaitQueue, f);
-    return true;
+    
+    tinsert(WaitQueue, f)
+    return true
 end
 
 aura_env.helpers.DelayExecution = DelayExecution
@@ -188,9 +188,9 @@ local function UnitMatchAuraActivationRules(unit)
         end
         return nil
     end
-
+    
     local match_result = nil
-
+    
     -- CLASS RULES
     local _, english_class = UnitClass(unit)
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
@@ -201,7 +201,7 @@ local function UnitMatchAuraActivationRules(unit)
             if not match_result then
                 match_result = { }
             end
-
+            
             match_result[aura_name] = true
         end
     end
@@ -221,7 +221,7 @@ local function UnitHasAuras(unit, match_result)
     if aura_env.helpers.AuraIsInDebug() then
         name = aura_env.helpers.UnitNameSafe(unit)
     end
-
+    
     local aura_result = { }
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
         if match_result[aura_name] then 
@@ -231,7 +231,7 @@ local function UnitHasAuras(unit, match_result)
                     if aura_env.helpers.AuraIsInDebug() then
                         print('HELPER: '..name..' ('..unit..') has '..name..' aura')
                     end
-
+                    
                     aura_result[aura_name] = {
                         match = true,
                         config = aura_config
@@ -351,9 +351,9 @@ local function GetFrames(target)
                     if aura_env.helpers.AuraIsInDebug() then
                         print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..'), caching')
                     end
-
+                    
                     aura_env.runtime.frames[frame] = unit
-
+                    
                     if UnitIsUnit(unit, target) then
                         tinsert(results, frame)
                     end
@@ -438,9 +438,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         if aura_env.helpers.AuraIsInDebug() then
             print('Enabling tracking of : '..aura_name..' aura')
         end
-
+        
         local runtime_aura_config = {
             id = 'aura:'..aura_name,
+            name = aura_name,
             icon = blizzard_aura.icon,
             levels = blizzard_aura.levels,
             classes = { },
@@ -456,7 +457,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 path      = aura_config.glow.path
             }
         }
-
+        
         for index, enabled in ipairs(aura_config.classes) do
             local blizzard_class = classes_to_blizzard_classes[index]
             if aura_env.helpers.AuraIsInDebug() and enabled then
@@ -465,7 +466,32 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             
             runtime_aura_config.classes[blizzard_class] = enabled   
         end
-
+        
+        if not aura_frames then
+            aura_frames = { }
+        end
+        if not aura_frames[aura_name] then
+            local frame = CreateFrame("Frame", runtime_aura_config.id, UIParent)
+            frame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
+                    edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
+                    tile = true, tileSize = 16, edgeSize = 16, 
+                    insets = { left = 4, right = 4, top = 4, bottom = 4 }})
+            frame:SetBackdropColor(0,0,0,1)
+            frame:SetScript(
+                "OnEnter",
+                function ()
+                    GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
+                    GameTooltip:SetText("Tooltip: "..aura_name)
+                    GameTooltip:Show()
+            end)
+            auraframe:SetScript(
+                "OnLeave",
+                function ()
+                    GameTooltip:Hide()
+            end)
+            aura_frames[aura_name] = frame
+        end
+        
         aura_env.runtime.config[aura_name] = runtime_aura_config
     end
 end
