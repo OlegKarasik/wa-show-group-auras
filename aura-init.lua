@@ -102,11 +102,16 @@ end
 -- Customized version of User-defined wait function
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
-local WaitQueue = { }
-local WaitClosure = aura_env
-
 local function DelayExecution(f)
     local capture_aura_env = aura_env
+
+    -- WaitQueue is a global variable
+    -- It is required to be global to ensure
+    -- life-time binding between WaitQueue and WaitQueueFrame
+
+    if not WaitQueue then
+        WaitQueue = { }
+    end
     
     -- WaitQueueFrame is a global variable
     -- It is required to reuse the same frame
@@ -304,6 +309,32 @@ local function UnitGlowAllAuras(unit, aura_results)
     end
 end
 
+local function TooltipHide(aura_name)
+    local frame = aura_frames[aura_name]
+    if frame then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('HELPER: Hidding tooltip frame for '..aura_name)
+        end
+
+        frame:Hide()
+    end
+end
+
+local function TooltipShow(aura_name)
+    local frame = aura_frames[aura_name]
+    if frame then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('HELPER: Showing tooltip frame for '..aura_name)
+        end
+
+        local region = WeakAuras.GetRegion(aura_env.id, aura_name)
+
+        frame:ClearAllPoints()
+        frame:SetAllPoints(region)
+        frame:Show()
+    end
+end
+
 local function IsInCombat()
     return aura_env.runtime.combat
 end
@@ -419,6 +450,9 @@ aura_env.runtime.helpers.UnitFadeAllAuras = UnitFadeAllAuras
 aura_env.runtime.helpers.UnitGlowAura = UnitGlowAura
 aura_env.runtime.helpers.UnitGlowAllAuras = UnitGlowAllAuras
 
+aura_env.runtime.helpers.TooltipHide = TooltipHide
+aura_env.runtime.helpers.TooltipShow = TooltipShow
+
 aura_env.runtime.helpers.IsInCombat  = IsInCombat
 aura_env.runtime.helpers.EnterCombat = EnterCombat
 aura_env.runtime.helpers.LeaveCombat = LeaveCombat
@@ -471,12 +505,18 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             aura_frames = { }
         end
         if not aura_frames[aura_name] then
+            -- Create non-secure frame with UIParent
             local frame = CreateFrame("Frame", runtime_aura_config.id, UIParent)
+
+            -- Set frame strata to DIALOG to ensure it will overlay aura icons
+            frame:SetFrameStrata("DIALOG")
+
             frame:SetBackdrop({bgFile = "Interface/Tooltips/UI-Tooltip-Background", 
                     edgeFile = "Interface/Tooltips/UI-Tooltip-Border", 
                     tile = true, tileSize = 16, edgeSize = 16, 
                     insets = { left = 4, right = 4, top = 4, bottom = 4 }})
             frame:SetBackdropColor(0,0,0,1)
+
             frame:SetScript(
                 "OnEnter",
                 function ()
