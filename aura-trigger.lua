@@ -3,8 +3,6 @@ function(allstates, event, unit)
         for aura_name, aura_result in pairs(aura_results) do
             if not states[aura_name] then
                 states[aura_name] = {
-                    aura_id = aura_result.config.id,
-                    aura_name = aura_result.config.name,
                     icon = aura_result.config.icon,
                     matchCount = 0,
                     units = { 
@@ -24,7 +22,13 @@ function(allstates, event, unit)
         -- We aren't deferring this execution to a frame
         -- event loop because we actually don't expect dynamic
         -- changes here
-        
+
+        -- Iterate over all auras and hide their tooltips
+        -- This is required to ensure proper initial state after aura reinitialization
+        for aura_name, aura_config in pairs(aura_env.runtime.config) do
+            aura_env.runtime.helpers.TooltipHide(aura_name)
+        end
+
         -- Clear the cache
         aura_env.runtime.helpers.ClearFrameCache()
         
@@ -248,6 +252,10 @@ function(allstates, event, unit)
                     -- Visual Update
                     aura_env.helpers.DelayExecution(
                         function ()
+                            if state.matchCount == 0 then 
+                                aura_env.runtime.helpers.TooltipHide(aura_result.config.name)
+                            end
+
                             aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
                     end)
                     --
@@ -271,7 +279,6 @@ function(allstates, event, unit)
                     
                     state.show = true
                     state.changed = true
-                    state.icon = aura_result.config.icon
                     state.matchCount = state.matchCount + 1
                     state.units[unit] = true
                 else
@@ -282,8 +289,6 @@ function(allstates, event, unit)
                     allstates[aura_name] = {
                         show = true,
                         changed = true,
-                        aura_id = aura_result.config.id,
-                        aura_name = aura_result.config.name,
                         icon = aura_result.config.icon,
                         matchCount = 1,
                         units = {
@@ -293,8 +298,14 @@ function(allstates, event, unit)
                 end
                 
                 -- Visual Update
+                local state = allstates[aura_name]
+
                 aura_env.helpers.DelayExecution(
                     function ()
+                        if state.matchCount == 1 then 
+                            aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
+                        end
+                        
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
                 end)
                 --
