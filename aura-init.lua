@@ -484,7 +484,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     GameTooltip:SetText("Tooltip: "..aura_name)
                     GameTooltip:Show()
             end)
-            auraframe:SetScript(
+            frame:SetScript(
                 "OnLeave",
                 function ()
                     GameTooltip:Hide()
