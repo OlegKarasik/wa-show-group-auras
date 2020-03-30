@@ -80,6 +80,14 @@ function(allstates, event, unit)
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
+                for aura_name, state in pairs(states) do
+                    if state.matchCount > 0 then
+                        aura_env.runtime.helpers.TooltipShow(aura_name)
+                    else 
+                        aura_env.runtime.helpers.TooltipHide(aura_name)
+                    end
+                end
+
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit, aura_results in pairs(unit_results) do
@@ -127,6 +135,10 @@ function(allstates, event, unit)
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
+                for aura_name, aura_config in pairs(aura_env.runtime.config) do
+                    aura_env.runtime.helpers.TooltipHide(aura_name)
+                end
+
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit in pairs(units_to_fade) do
@@ -173,6 +185,12 @@ function(allstates, event, unit)
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
+                for aura_name, state in pairs(states) do
+                    if state.matchCount > 0 then
+                        aura_env.runtime.helpers.TooltipShow(aura_name)
+                    end
+                end
+
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit, aura_results in pairs(unit_results) do
