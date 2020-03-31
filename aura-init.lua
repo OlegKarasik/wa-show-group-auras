@@ -170,6 +170,8 @@ aura_env.runtime = {
     },
     frames = {
     },
+    tooltips = {
+    },
     combat = false
 }
 
@@ -320,12 +322,17 @@ local function TooltipHide(aura_name)
     end
 end
 
-local function TooltipShow(aura_name)
+local function TooltipShow(aura_name, tooltip_lines)
     local frame = aura_frames[aura_name]
     if frame then
         if aura_env.helpers.AuraIsInDebug() then
             print('HELPER: Showing tooltip frame for '..aura_name)
         end
+
+        aura_env.runtime.tooltips[aura_name] = {
+            anchor = frame,
+            lines = tooltip_lines
+        }
 
         local region = WeakAuras.GetRegion(aura_env.id, aura_name)
 
@@ -520,8 +527,15 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             frame:SetScript(
                 "OnEnter",
                 function ()
-                    GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
-                    GameTooltip:SetText("Tooltip: "..aura_name)
+                    local tooltip = aura_env.runtime.tooltips[aura_name]
+
+                    GameTooltip:SetOwner(tooltip.anchor, "ANCHOR_RIGHT")
+                    GameTooltip:ClearLines()
+
+                    for _, line in pairs(tooltip.lines) do
+                        GameTooltip:AddLine(line)
+                    end
+
                     GameTooltip:Show()
             end)
             frame:SetScript(

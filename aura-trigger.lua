@@ -82,7 +82,7 @@ function(allstates, event, unit)
             function ()
                 for aura_name, state in pairs(states) do
                     if state.matchCount > 0 then
-                        aura_env.runtime.helpers.TooltipShow(aura_name)
+                        aura_env.runtime.helpers.TooltipShow(aura_name, { 'matched', tostring(state.matchCount) })
                     else 
                         aura_env.runtime.helpers.TooltipHide(aura_name)
                     end
@@ -187,7 +187,7 @@ function(allstates, event, unit)
             function ()
                 for aura_name, state in pairs(states) do
                     if state.matchCount > 0 then
-                        aura_env.runtime.helpers.TooltipShow(aura_name)
+                        aura_env.runtime.helpers.TooltipShow(aura_name, { 'matched', tostring(state.matchCount) })
                     end
                 end
 
@@ -321,7 +321,7 @@ function(allstates, event, unit)
                 aura_env.helpers.DelayExecution(
                     function ()
                         if state.matchCount == 1 then 
-                            aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
+                            aura_env.runtime.helpers.TooltipShow(aura_result.config.name, { 'matched', tostring(state.matchCount) })
                         end
                         
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
