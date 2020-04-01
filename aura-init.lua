@@ -322,17 +322,12 @@ local function TooltipHide(aura_name)
     end
 end
 
-local function TooltipShow(aura_name, tooltip_lines)
+local function TooltipShow(aura_name)
     local frame = aura_frames[aura_name]
     if frame then
         if aura_env.helpers.AuraIsInDebug() then
             print('HELPER: Showing tooltip frame for '..aura_name)
         end
-
-        aura_env.runtime.tooltips[aura_name] = {
-            anchor = frame,
-            lines = tooltip_lines
-        }
 
         local region = WeakAuras.GetRegion(aura_env.id, aura_name)
 
@@ -340,6 +335,14 @@ local function TooltipShow(aura_name, tooltip_lines)
         frame:SetAllPoints(region)
         frame:Show()
     end
+end
+
+local function TooltipUpdateContent(aura_name, content)
+    if aura_env.helpers.AuraIsInDebug() then
+        print('HELPER: Updating '..aura_name..' tooltip content')
+    end
+
+    aura_env.runtime.tooltips[aura_name] = content
 end
 
 local function IsInCombat()
@@ -459,6 +462,7 @@ aura_env.runtime.helpers.UnitGlowAllAuras = UnitGlowAllAuras
 
 aura_env.runtime.helpers.TooltipHide = TooltipHide
 aura_env.runtime.helpers.TooltipShow = TooltipShow
+aura_env.runtime.helpers.TooltipUpdateContent = TooltipUpdateContent
 
 aura_env.runtime.helpers.IsInCombat  = IsInCombat
 aura_env.runtime.helpers.EnterCombat = EnterCombat
@@ -527,12 +531,12 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             frame:SetScript(
                 "OnEnter",
                 function ()
-                    local tooltip = aura_env.runtime.tooltips[aura_name]
+                    local content = aura_env.runtime.tooltips[aura_name]
 
-                    GameTooltip:SetOwner(tooltip.anchor, "ANCHOR_RIGHT")
+                    GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
                     GameTooltip:ClearLines()
 
-                    for _, line in pairs(tooltip.lines) do
+                    for _, line in pairs(content) do
                         GameTooltip:AddLine(line)
                     end
 
@@ -544,8 +548,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     GameTooltip:Hide()
             end)
             aura_frames[aura_name] = frame
+
         end
-        
+
         aura_env.runtime.config[aura_name] = runtime_aura_config
+        aura_env.runtime.tooltips[aura_name] = { }
     end
 end

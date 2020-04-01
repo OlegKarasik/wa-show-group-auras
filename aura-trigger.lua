@@ -1,18 +1,46 @@
 function(allstates, event, unit)
     local function UpdateUnitAuraStates(states, unit, aura_results)
+        local is_group = IsInGroup()
+        local is_raid  = IsInRaid()
+
+
         for aura_name, aura_result in pairs(aura_results) do
-            if not states[aura_name] then
-                states[aura_name] = {
+            local state = states[aura_name]
+
+            if not state then
+                state = {
                     icon = aura_result.config.icon,
                     matchCount = 0,
                     units = { 
+                    },
+                    tooltip = {
                     }
                 }
+
+                states[aura_name] = state
             end
             if not aura_result.match then
-                states[aura_name].matchCount = states[aura_name].matchCount + 1
+                state.matchCount = state.matchCount + 1
+
+                if is_raid then
+                    local raid_index = UnitInRaid(unit)
+                    local _, _, subgroup = GetRaidRosterInfo(raid_index)
+    
+                    local tooltip = state.tooltip[subgroup]
+                    if not tooltip then
+                        tooltip = { }
+    
+                        state.tooltip[subgroup] = tooltip
+                    end
+    
+                    tinsert(tooltip, unit)
+                else 
+                    if is_group then 
+    
+                    end
+                end
             end
-            states[aura_name].units[unit] = not aura_result.match
+            state.units[unit] = not aura_result.match
         end
     end
     if event == 'OPTIONS' then
@@ -82,6 +110,7 @@ function(allstates, event, unit)
             function ()
                 for aura_name, state in pairs(states) do
                     if state.matchCount > 0 then
+                        aura_env.runtime.helpers.TooltipUpdateContent(aura_name, { 'matched', tostring(state.matchCount) })
                         aura_env.runtime.helpers.TooltipShow(aura_name, { 'matched', tostring(state.matchCount) })
                     else 
                         aura_env.runtime.helpers.TooltipHide(aura_name)
@@ -186,6 +215,7 @@ function(allstates, event, unit)
         aura_env.helpers.DelayExecution(
             function ()
                 for aura_name, state in pairs(states) do
+                    aura_env.runtime.helpers.TooltipUpdateContent(aura_name, { 'matched', tostring(state.matchCount) })
                     if state.matchCount > 0 then
                         aura_env.runtime.helpers.TooltipShow(aura_name, { 'matched', tostring(state.matchCount) })
                     end
@@ -270,6 +300,7 @@ function(allstates, event, unit)
                     -- Visual Update
                     aura_env.helpers.DelayExecution(
                         function ()
+                            aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, { 'matched', tostring(state.matchCount) })
                             if state.matchCount == 0 then 
                                 aura_env.runtime.helpers.TooltipHide(aura_result.config.name)
                             end
@@ -311,6 +342,8 @@ function(allstates, event, unit)
                         matchCount = 1,
                         units = {
                             [unit] = true
+                        },
+                        tooltip = {
                         }
                     }
                 end
@@ -320,8 +353,9 @@ function(allstates, event, unit)
 
                 aura_env.helpers.DelayExecution(
                     function ()
+                        aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, { 'matched', tostring(state.matchCount) })
                         if state.matchCount == 1 then 
-                            aura_env.runtime.helpers.TooltipShow(aura_result.config.name, { 'matched', tostring(state.matchCount) })
+                            aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
                         end
                         
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
