@@ -337,9 +337,46 @@ local function TooltipShow(aura_name)
     end
 end
 
-local function TooltipUpdateContent(aura_name, content)
+local function TooltipUpdateContent(aura_name, state)
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Updating '..aura_name..' tooltip content')
+    end
+
+    local content = { aura_name }
+    local is_raid = IsInRaid()
+    if is_raid then 
+        local group_infos = { }
+        for unit, aura_match in pairs(state.units) do
+            if aura_match then
+                local raid_index = UnitInRaid(unit)
+                if raid_index then
+                    local _, _, subgroup = GetRaidRosterInfo(raid_index)
+
+                    local group_info = group_infos[subgroup]
+                    if not group_info then
+                        group_info = {
+                            count = 0,
+                            names = { }
+                        }
+
+                        group_infos[subgroup] = group_info
+                    end
+
+                    group_info.count = group_info.count + 1
+
+                    tinsert(group_info.names, aura_env.helpers.UnitNameSafe(unit))
+                end
+            end
+        end
+        for index, info in pairs(group_infos) do
+            tinsert(content, 'Group #'..index..' ('..info.count..')')
+
+            local names = '  '
+            for _, name in pairs(info.names) do 
+                names = names..name..' '
+            end
+            tinsert(content, names)
+        end
     end
 
     aura_env.runtime.tooltips[aura_name] = content

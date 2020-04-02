@@ -1,9 +1,5 @@
 function(allstates, event, unit)
     local function UpdateUnitAuraStates(states, unit, aura_results)
-        local is_group = IsInGroup()
-        local is_raid  = IsInRaid()
-
-
         for aura_name, aura_result in pairs(aura_results) do
             local state = states[aura_name]
 
@@ -21,25 +17,8 @@ function(allstates, event, unit)
             end
             if not aura_result.match then
                 state.matchCount = state.matchCount + 1
-
-                if is_raid then
-                    local raid_index = UnitInRaid(unit)
-                    local _, _, subgroup = GetRaidRosterInfo(raid_index)
-    
-                    local tooltip = state.tooltip[subgroup]
-                    if not tooltip then
-                        tooltip = { }
-    
-                        state.tooltip[subgroup] = tooltip
-                    end
-    
-                    tinsert(tooltip, unit)
-                else 
-                    if is_group then 
-    
-                    end
-                end
             end
+
             state.units[unit] = not aura_result.match
         end
     end
@@ -110,8 +89,8 @@ function(allstates, event, unit)
             function ()
                 for aura_name, state in pairs(states) do
                     if state.matchCount > 0 then
-                        aura_env.runtime.helpers.TooltipUpdateContent(aura_name, { 'matched', tostring(state.matchCount) })
-                        aura_env.runtime.helpers.TooltipShow(aura_name, { 'matched', tostring(state.matchCount) })
+                        aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
+                        aura_env.runtime.helpers.TooltipShow(aura_name)
                     else 
                         aura_env.runtime.helpers.TooltipHide(aura_name)
                     end
@@ -215,9 +194,9 @@ function(allstates, event, unit)
         aura_env.helpers.DelayExecution(
             function ()
                 for aura_name, state in pairs(states) do
-                    aura_env.runtime.helpers.TooltipUpdateContent(aura_name, { 'matched', tostring(state.matchCount) })
+                    aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
                     if state.matchCount > 0 then
-                        aura_env.runtime.helpers.TooltipShow(aura_name, { 'matched', tostring(state.matchCount) })
+                        aura_env.runtime.helpers.TooltipShow(aura_name)
                     end
                 end
 
@@ -300,7 +279,7 @@ function(allstates, event, unit)
                     -- Visual Update
                     aura_env.helpers.DelayExecution(
                         function ()
-                            aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, { 'matched', tostring(state.matchCount) })
+                            aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
                             if state.matchCount == 0 then 
                                 aura_env.runtime.helpers.TooltipHide(aura_result.config.name)
                             end
@@ -353,7 +332,7 @@ function(allstates, event, unit)
 
                 aura_env.helpers.DelayExecution(
                     function ()
-                        aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, { 'matched', tostring(state.matchCount) })
+                        aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
                         if state.matchCount == 1 then 
                             aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
                         end
