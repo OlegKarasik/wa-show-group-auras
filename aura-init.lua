@@ -369,11 +369,12 @@ local function TooltipUpdateContent(aura_name, state)
             end
         end
         for index, info in pairs(group_infos) do
-            tinsert(content, 'Group #'..index..' ('..info.count..')')
+            local line = string.format("Group %d (%d)", index, info.count)
+            tinsert(content, line)
 
-            local names = '  '
+            local names = ' '
             for _, name in pairs(info.names) do 
-                names = names..name..' '
+                names = names..string.format("%-30s", name)
             end
             tinsert(content, names)
         end
