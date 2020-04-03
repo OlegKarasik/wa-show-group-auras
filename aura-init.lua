@@ -342,45 +342,7 @@ local function TooltipUpdateContent(aura_name, state)
         print('HELPER: Updating '..aura_name..' tooltip content')
     end
 
-    local content = { aura_name }
-    local is_raid = IsInRaid()
-    if is_raid then 
-        local group_infos = { }
-        for unit, aura_match in pairs(state.units) do
-            if aura_match then
-                local raid_index = UnitInRaid(unit)
-                if raid_index then
-                    local _, _, subgroup = GetRaidRosterInfo(raid_index)
-
-                    local group_info = group_infos[subgroup]
-                    if not group_info then
-                        group_info = {
-                            count = 0,
-                            names = { }
-                        }
-
-                        group_infos[subgroup] = group_info
-                    end
-
-                    group_info.count = group_info.count + 1
-
-                    tinsert(group_info.names, aura_env.helpers.UnitNameSafe(unit))
-                end
-            end
-        end
-        for index, info in pairs(group_infos) do
-            local line = string.format("Group %d (%d)", index, info.count)
-            tinsert(content, line)
-
-            local names = ' '
-            for _, name in pairs(info.names) do 
-                names = names..string.format("%-30s", name)
-            end
-            tinsert(content, names)
-        end
-    end
-
-    aura_env.runtime.tooltips[aura_name] = content
+    aura_env.runtime.tooltips[aura_name].state = state
 end
 
 local function IsInCombat()
@@ -569,13 +531,91 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             frame:SetScript(
                 "OnEnter",
                 function ()
-                    local content = aura_env.runtime.tooltips[aura_name]
-
                     GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
                     GameTooltip:ClearLines()
 
-                    for _, line in pairs(content) do
-                        GameTooltip:AddLine(line)
+                    local state = aura_env.runtime.tooltips[aura_name].state
+                    if not state then 
+                        return
+                    end
+
+                    if IsInRaid() then 
+                        local buffed, unbuffed = 0, 0
+                        local raid_groups = { }
+                        for unit, aura_match in pairs(state.units) do
+                            local raid_index = UnitInRaid(unit)
+                            if raid_index then
+                                local _, _, raid_group_index = GetRaidRosterInfo(raid_index)
+
+                                local raid_group = raid_groups[raid_group_index]
+                                if not raid_group then
+                                    raid_group = { unbuffed = 0, buffed = 0, units = { } }
+                                    raid_groups[raid_group_index] = raid_group
+                                end
+
+                                if aura_match then
+                                    unbuffed = unbuffed + 1
+                                    raid_group.unbuffed = raid_group.unbuffed + 1
+
+                                    tinsert(raid_group.units, aura_env.helpers.UnitNameSafe(unit))
+                                else
+                                    buffed = buffed + 1
+                                    raid_group.buffed = raid_group.buffed + 1
+                                end
+
+                            end
+                        end
+
+                        local sraid_groups = { }
+                        for raid_group_index in pairs(raid_groups) do
+                            tinsert(sraid_groups, raid_group_index)
+                        end
+                        table.sort(sraid_groups, function(x, y) return x < y end)
+
+                        -- Update tooltip content using the following template:
+                        -- Aura               Raid, 5 of 8
+                        --
+                        -- Group 1                  3 of 5
+                        -- Name, Name
+                        --
+                        -- Group 2                  2 of 3
+                        -- Name
+                        -- ... etc
+
+                        GameTooltip:AddDoubleLine('Aura', 'Raid', 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddLine(' ')
+
+                        local is_empty = true
+                        for index, raid_group_index in ipairs(sraid_groups) do
+                            local raid_group = raid_groups[raid_group_index]
+
+                            if raid_group.unbuffed > 0 then
+                                GameTooltip:AddDoubleLine(
+                                    string.format('Group %d', raid_group_index),
+                                    string.format('%d of %d', raid_group.buffed, raid_group.unbuffed + raid_group.buffed), 
+                                    nil, nil, nil, 
+                                    0.5, 0.5, 0.5)
+
+                                GameTooltip:AddLine(table.concat(raid_group.units, ', '), 1, 1, 1)
+
+                                is_empty = false
+                            end
+                        end
+                        if is_empty then 
+                            GameTooltip:AddLine('There is no one left without buffs', 1, 1, 1)
+                        end
+                    elseif IsInGroup() then
+                        GameTooltip:AddDoubleLine('Aura', 'Party', 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddLine(' ')
+                        GameTooltip:AddLine('Group')
+
+                        for unit, aura_match in pairs(state.units) do
+                            if aura_match then
+                                GameTooltip:AddLine(aura_env.helpers.UnitNameSafe(unit), 1, 1, 1)
+                            end
+                        end
+                    else
+                        GameTooltip:AddLine('You do not have aura')
                     end
 
                     GameTooltip:Show()
@@ -590,6 +630,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         end
 
         aura_env.runtime.config[aura_name] = runtime_aura_config
-        aura_env.runtime.tooltips[aura_name] = { }
+        aura_env.runtime.tooltips[aura_name] = { 
+        }
     end
 end
