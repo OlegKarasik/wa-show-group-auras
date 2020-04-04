@@ -102,16 +102,22 @@ end
 -- Customized version of User-defined wait function
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
-local WaitQueue = { };
-local WaitQueueFrame = nil;
-
-local WaitClosure = aura_env
-
 local function DelayExecution(f)
-    local capture_aura_env = aura_env;
+    local capture_aura_env = aura_env
 
+    -- WaitQueue is a global variable
+    -- It is required to be global to ensure
+    -- life-time binding between WaitQueue and WaitQueueFrame
+
+    if not WaitQueue then
+        WaitQueue = { }
+    end
+    
+    -- WaitQueueFrame is a global variable
+    -- It is required to reuse the same frame
+    
     if not WaitQueueFrame then
-        WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent);
+        WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent)
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
@@ -119,21 +125,21 @@ local function DelayExecution(f)
                     aura_env = capture_aura_env 
                 end
                 
-                local count = #WaitQueue;
-
-                local i = 1;
+                local count = #WaitQueue
+                
+                local i = 1
                 while i <= count do
-                    local fn = tremove(WaitQueue, i);
+                    local fn = tremove(WaitQueue, i)
                     if fn then 
                         fn()
                     end
                     i = i + 1
                 end
-            end);
+        end)
     end
-
-    tinsert(WaitQueue, f);
-    return true;
+    
+    tinsert(WaitQueue, f)
+    return true
 end
 
 aura_env.helpers.DelayExecution = DelayExecution
@@ -164,6 +170,8 @@ aura_env.runtime = {
     },
     frames = {
     },
+    tooltips = {
+    },
     combat = false
 }
 
@@ -187,9 +195,9 @@ local function UnitMatchAuraActivationRules(unit)
         end
         return nil
     end
-
+    
     local match_result = nil
-
+    
     -- CLASS RULES
     local _, english_class = UnitClass(unit)
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
@@ -200,7 +208,7 @@ local function UnitMatchAuraActivationRules(unit)
             if not match_result then
                 match_result = { }
             end
-
+            
             match_result[aura_name] = true
         end
     end
@@ -220,7 +228,7 @@ local function UnitHasAuras(unit, match_result)
     if aura_env.helpers.AuraIsInDebug() then
         name = aura_env.helpers.UnitNameSafe(unit)
     end
-
+    
     local aura_result = { }
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
         if match_result[aura_name] then 
@@ -230,7 +238,7 @@ local function UnitHasAuras(unit, match_result)
                     if aura_env.helpers.AuraIsInDebug() then
                         print('HELPER: '..name..' ('..unit..') has '..name..' aura')
                     end
-
+                    
                     aura_result[aura_name] = {
                         match = true,
                         config = aura_config
@@ -303,6 +311,40 @@ local function UnitGlowAllAuras(unit, aura_results)
     end
 end
 
+local function TooltipHide(aura_name)
+    local frame = aura_frames[aura_name]
+    if frame then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('HELPER: Hidding tooltip frame for '..aura_name)
+        end
+
+        frame:Hide()
+    end
+end
+
+local function TooltipShow(aura_name)
+    local frame = aura_frames[aura_name]
+    if frame then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('HELPER: Showing tooltip frame for '..aura_name)
+        end
+
+        local region = WeakAuras.GetRegion(aura_env.id, aura_name)
+
+        frame:ClearAllPoints()
+        frame:SetAllPoints(region)
+        frame:Show()
+    end
+end
+
+local function TooltipUpdateContent(aura_name, state)
+    if aura_env.helpers.AuraIsInDebug() then
+        print('HELPER: Updating '..aura_name..' tooltip content')
+    end
+
+    aura_env.runtime.tooltips[aura_name].state = state
+end
+
 local function IsInCombat()
     return aura_env.runtime.combat
 end
@@ -350,9 +392,9 @@ local function GetFrames(target)
                     if aura_env.helpers.AuraIsInDebug() then
                         print('HELPER: Frame ('..frame:GetName()..') bound to unit ('..unit..'), caching')
                     end
-
+                    
                     aura_env.runtime.frames[frame] = unit
-
+                    
                     if UnitIsUnit(unit, target) then
                         tinsert(results, frame)
                     end
@@ -418,6 +460,10 @@ aura_env.runtime.helpers.UnitFadeAllAuras = UnitFadeAllAuras
 aura_env.runtime.helpers.UnitGlowAura = UnitGlowAura
 aura_env.runtime.helpers.UnitGlowAllAuras = UnitGlowAllAuras
 
+aura_env.runtime.helpers.TooltipHide = TooltipHide
+aura_env.runtime.helpers.TooltipShow = TooltipShow
+aura_env.runtime.helpers.TooltipUpdateContent = TooltipUpdateContent
+
 aura_env.runtime.helpers.IsInCombat  = IsInCombat
 aura_env.runtime.helpers.EnterCombat = EnterCombat
 aura_env.runtime.helpers.LeaveCombat = LeaveCombat
@@ -437,9 +483,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         if aura_env.helpers.AuraIsInDebug() then
             print('Enabling tracking of : '..aura_name..' aura')
         end
-
+        
         local runtime_aura_config = {
             id = 'aura:'..aura_name,
+            name = aura_name,
             icon = blizzard_aura.icon,
             levels = blizzard_aura.levels,
             classes = { },
@@ -455,7 +502,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 path      = aura_config.glow.path
             }
         }
-
+        
         for index, enabled in ipairs(aura_config.classes) do
             local blizzard_class = classes_to_blizzard_classes[index]
             if aura_env.helpers.AuraIsInDebug() and enabled then
@@ -464,7 +511,119 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             
             runtime_aura_config.classes[blizzard_class] = enabled   
         end
+        
+        if not aura_frames then
+            aura_frames = { }
+        end
+        if not aura_frames[aura_name] then
+            -- Create non-secure frame with UIParent
+            local frame = CreateFrame("Frame", runtime_aura_config.id, UIParent)
+
+            -- Set frame strata to DIALOG to ensure it will overlay aura icons
+            frame:SetFrameStrata("DIALOG")
+            frame:SetScript(
+                "OnEnter",
+                function ()
+                    GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
+                    GameTooltip:ClearLines()
+
+                    local state = aura_env.runtime.tooltips[aura_name].state
+                    if not state then 
+                        return
+                    end
+
+                    if IsInRaid() then 
+                        local buffed, unbuffed = 0, 0
+                        local raid_groups = { }
+                        for unit, aura_match in pairs(state.units) do
+                            local raid_index = UnitInRaid(unit)
+                            if raid_index then
+                                local _, _, raid_group_index = GetRaidRosterInfo(raid_index)
+
+                                local raid_group = raid_groups[raid_group_index]
+                                if not raid_group then
+                                    raid_group = { unbuffed = 0, buffed = 0, units = { } }
+                                    raid_groups[raid_group_index] = raid_group
+                                end
+
+                                if aura_match then
+                                    unbuffed = unbuffed + 1
+                                    raid_group.unbuffed = raid_group.unbuffed + 1
+
+                                    tinsert(raid_group.units, aura_env.helpers.UnitNameSafe(unit))
+                                else
+                                    buffed = buffed + 1
+                                    raid_group.buffed = raid_group.buffed + 1
+                                end
+
+                            end
+                        end
+
+                        local sraid_groups = { }
+                        for raid_group_index in pairs(raid_groups) do
+                            tinsert(sraid_groups, raid_group_index)
+                        end
+                        table.sort(sraid_groups, function(x, y) return x < y end)
+
+                        -- Update tooltip content using the following template:
+                        -- Aura               Raid, 5 of 8
+                        --
+                        -- Group 1                  3 of 5
+                        -- Name, Name
+                        --
+                        -- Group 2                  2 of 3
+                        -- Name
+                        -- ... etc
+
+                        GameTooltip:AddDoubleLine('Aura', 'Raid', 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddLine(' ')
+
+                        local is_empty = true
+                        for index, raid_group_index in ipairs(sraid_groups) do
+                            local raid_group = raid_groups[raid_group_index]
+
+                            if raid_group.unbuffed > 0 then
+                                GameTooltip:AddDoubleLine(
+                                    string.format('Group %d', raid_group_index),
+                                    string.format('%d of %d', raid_group.buffed, raid_group.unbuffed + raid_group.buffed), 
+                                    nil, nil, nil, 
+                                    0.5, 0.5, 0.5)
+
+                                GameTooltip:AddLine(table.concat(raid_group.units, ', '), 1, 1, 1)
+
+                                is_empty = false
+                            end
+                        end
+                        if is_empty then 
+                            GameTooltip:AddLine('There is no one left without buffs', 1, 1, 1)
+                        end
+                    elseif IsInGroup() then
+                        GameTooltip:AddDoubleLine('Aura', 'Party', 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddLine(' ')
+                        GameTooltip:AddLine('Group')
+
+                        for unit, aura_match in pairs(state.units) do
+                            if aura_match then
+                                GameTooltip:AddLine(aura_env.helpers.UnitNameSafe(unit), 1, 1, 1)
+                            end
+                        end
+                    else
+                        GameTooltip:AddLine('You do not have aura')
+                    end
+
+                    GameTooltip:Show()
+            end)
+            frame:SetScript(
+                "OnLeave",
+                function ()
+                    GameTooltip:Hide()
+            end)
+            aura_frames[aura_name] = frame
+
+        end
 
         aura_env.runtime.config[aura_name] = runtime_aura_config
+        aura_env.runtime.tooltips[aura_name] = { 
+        }
     end
 end
