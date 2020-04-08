@@ -55,6 +55,27 @@ local classes_to_blizzard_classes = {
     [9] = 'DRUID'
 }
 
+local localization_auras = {
+    english = {
+        ['arcane-intellect'] = 'Arcane Intellect',
+        ['divine-spirit'] = 'Divine Spirit',
+        ['mark-of-the-wild'] = 'Mark of the Wild',
+        ['power-word-fortitude'] = 'Power Word: Fortitude',
+        ['shadow-protection'] = 'Shadow Protection'
+    }
+}
+
+local localization_strings = {
+    english = {
+        s_group      = 'Group',
+        f_group      = 'Group %d',
+        f_group_cnt  = '%d of %d',
+        s_party      = 'Party',
+        s_raid       = 'Raid',
+        s_no_aura    = 'You do not have aura'
+    }
+}
+
 aura_env.helpers = {
 }
 
@@ -532,6 +553,8 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         return
                     end
 
+                    local localization = aura_env.runtime.tooltips[aura_name].localization
+
                     if IsInRaid() then 
                         local buffed, unbuffed = 0, 0
                         local raid_groups = { }
@@ -575,7 +598,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         -- Name
                         -- ... etc
 
-                        GameTooltip:AddDoubleLine('Aura', 'Raid', 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddDoubleLine('Aura', localization.s_raid, 1, 1, 1, 0.5, 0.5, 0.5)
                         GameTooltip:AddLine(' ')
 
                         local is_empty = true
@@ -584,8 +607,8 @@ for _, aura_config in ipairs(aura_env.config.auras) do
 
                             if raid_group.unbuffed > 0 then
                                 GameTooltip:AddDoubleLine(
-                                    string.format('Group %d', raid_group_index),
-                                    string.format('%d of %d', raid_group.buffed, raid_group.unbuffed + raid_group.buffed), 
+                                    string.format(localization.f_group, raid_group_index),
+                                    string.format(localization.f_group_cnt, raid_group.buffed, raid_group.unbuffed + raid_group.buffed), 
                                     nil, nil, nil, 
                                     0.5, 0.5, 0.5)
 
@@ -598,9 +621,9 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             GameTooltip:AddLine('There is no one left without buffs', 1, 1, 1)
                         end
                     elseif IsInGroup() then
-                        GameTooltip:AddDoubleLine('Aura', 'Party', 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddDoubleLine('Aura', localization.s_party, 1, 1, 1, 0.5, 0.5, 0.5)
                         GameTooltip:AddLine(' ')
-                        GameTooltip:AddLine('Group')
+                        GameTooltip:AddLine(localization.s_group)
 
                         for unit, aura_match in pairs(state.units) do
                             if aura_match then
@@ -608,7 +631,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             end
                         end
                     else
-                        GameTooltip:AddLine('You do not have aura')
+                        GameTooltip:AddLine(localization.s_no_aura)
                     end
 
                     GameTooltip:Show()
@@ -622,8 +645,20 @@ for _, aura_config in ipairs(aura_env.config.auras) do
 
         end
 
+        local loc_a = localization_auras['english']
+        local loc_s = localization_strings['english'];
+
         aura_env.runtime.config[aura_name] = runtime_aura_config
         aura_env.runtime.tooltips[aura_name] = { 
+            localization = {
+                s_aura       = loc_a[aura_name],
+                s_group      = loc_s.s_group,
+                f_group      = loc_s.f_group,
+                f_group_cnt  = loc_s.f_group_cnt,
+                s_party      = loc_s.s_party,
+                s_raid       = loc_s.s_raid,
+                s_no_aura    = loc_s.s_no_aura
+            }
         }
     end
 end
