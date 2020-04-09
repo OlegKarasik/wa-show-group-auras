@@ -55,6 +55,13 @@ local classes_to_blizzard_classes = {
     [9] = 'DRUID'
 }
 
+local blizzard_locale_to_localization = {
+    default = 'english',
+    enGB    = 'english',
+    enUS    = 'english',
+    ruRU    = 'russian'
+}
+
 local localization_auras = {
     english = {
         ['arcane-intellect'] = 'Arcane Intellect',
@@ -62,6 +69,13 @@ local localization_auras = {
         ['mark-of-the-wild'] = 'Mark of the Wild',
         ['power-word-fortitude'] = 'Power Word: Fortitude',
         ['shadow-protection'] = 'Shadow Protection'
+    },
+    russian = {
+        ['arcane-intellect'] = 'Чародейский интеллект',
+        ['divine-spirit'] = 'Божественный дух',
+        ['mark-of-the-wild'] = 'Знак дикой природы',
+        ['power-word-fortitude'] = 'Слово силы: Стойкость',
+        ['shadow-protection'] = 'Защиты от темной магии'
     }
 }
 
@@ -73,6 +87,14 @@ local localization_strings = {
         s_party      = 'Party',
         s_raid       = 'Raid',
         s_no_aura    = 'You do not have aura'
+    },
+    russian = {
+        s_group      = 'Группа',
+        f_group      = 'Группа %d',
+        f_group_cnt  = '%d из %d',
+        s_party      = 'Группа',
+        s_raid       = 'Рейд',
+        s_no_aura    = 'Аура отсутствует'
     }
 }
 
@@ -493,6 +515,9 @@ aura_env.runtime.helpers.GetFrame = GetFrame
 
 -- AURA INITIALIZATION --
 
+local client_locale = GetLocale();
+local locale = blizzard_locale_to_localization[client_locale]
+
 if aura_env.helpers.AuraIsInDebug() then
     print('Aura version: 0.1')
 end
@@ -598,7 +623,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         -- Name
                         -- ... etc
 
-                        GameTooltip:AddDoubleLine('Aura', localization.s_raid, 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddDoubleLine(localization.s_aura, localization.s_raid, 1, 1, 1, 0.5, 0.5, 0.5)
                         GameTooltip:AddLine(' ')
 
                         local is_empty = true
@@ -621,7 +646,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             GameTooltip:AddLine('There is no one left without buffs', 1, 1, 1)
                         end
                     elseif IsInGroup() then
-                        GameTooltip:AddDoubleLine('Aura', localization.s_party, 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddDoubleLine(localization.s_aura, localization.s_party, 1, 1, 1, 0.5, 0.5, 0.5)
                         GameTooltip:AddLine(' ')
                         GameTooltip:AddLine(localization.s_group)
 
@@ -645,8 +670,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
 
         end
 
-        local loc_a = localization_auras['english']
-        local loc_s = localization_strings['english'];
+
+
+        local loc_a = localization_auras[locale]
+        local loc_s = localization_strings[locale]
 
         aura_env.runtime.config[aura_name] = runtime_aura_config
         aura_env.runtime.tooltips[aura_name] = { 
