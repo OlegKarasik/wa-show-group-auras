@@ -1,10 +1,14 @@
--- CONFIGURATION MAPPINGS --
+-- AURA CONFIGURATION --
 
+-- aura_env.config.auras is the root configuration entity
+-- index, aura_config
+--
 -- aura_config = {
 --   classes = {
 --     [0-9] = true / false
 --   }
 --   glow = {
+--     enable
 --     count 
 --     speed 
 --     length
@@ -14,6 +18,8 @@
 --     path
 --   } 
 -- }
+
+-- CONFIGURATION MAPPINGS --
 
 local auras_to_blizzard_auras = {
     [1] = {
@@ -62,41 +68,116 @@ local blizzard_locale_to_localization = {
     ruRU    = 'russian'
 }
 
-local localization_auras = {
-    english = {
-        ['arcane-intellect'] = 'Arcane Intellect',
-        ['divine-spirit'] = 'Divine Spirit',
-        ['mark-of-the-wild'] = 'Mark of the Wild',
-        ['power-word-fortitude'] = 'Power Word: Fortitude',
-        ['shadow-protection'] = 'Shadow Protection'
+-- DEFINE CUSTOMIZATIONS --
+
+local aura_customz = { 
+    auras = {
+        [1] = { 
+            name = 'arcane-intellect',
+            glow = {
+                enable = false
+            }
+        },
+        [2] = { 
+            name = 'divine-spirit',
+            glow = {
+                enable = false
+            }
+        },
+        [3] = { 
+            name = 'mark-of-the-wild',
+            glow = {
+                enable = false
+            }
+        },
+        [4] = { 
+            name = 'power-word-fortitude',
+            glow = {
+                enable = false
+            }
+        },
+        [5] = { 
+            name = 'shadow-protection',
+            glow = {
+                enable = false
+            }
+        }
     },
-    russian = {
-        ['arcane-intellect'] = 'Чародейский интеллект',
-        ['divine-spirit'] = 'Божественный дух',
-        ['mark-of-the-wild'] = 'Знак дикой природы',
-        ['power-word-fortitude'] = 'Слово силы: Стойкость',
-        ['shadow-protection'] = 'Защиты от темной магии'
+    internal = {
+        debug = false
+    },
+    localization = {
+        auras = {
+            english = {
+                ['arcane-intellect'] = 'Arcane Intellect',
+                ['divine-spirit'] = 'Divine Spirit',
+                ['mark-of-the-wild'] = 'Mark of the Wild',
+                ['power-word-fortitude'] = 'Power Word: Fortitude',
+                ['shadow-protection'] = 'Shadow Protection'
+            },
+            russian = {
+                ['arcane-intellect'] = 'Чародейский интеллект',
+                ['divine-spirit'] = 'Божественный дух',
+                ['mark-of-the-wild'] = 'Знак дикой природы',
+                ['power-word-fortitude'] = 'Слово силы: Стойкость',
+                ['shadow-protection'] = 'Защиты от темной магии'
+            }
+        },
+        strings = {
+            english = {
+                s_group      = 'Group',
+                f_group      = 'Group %d',
+                f_group_cnt  = '%d of %d',
+                s_party      = 'Party',
+                s_raid       = 'Raid',
+                s_no_aura    = 'You do not have aura'
+            },
+            russian = {
+                s_group      = 'Группа',
+                f_group      = 'Группа %d',
+                f_group_cnt  = '%d из %d',
+                s_party      = 'Группа',
+                s_raid       = 'Рейд',
+                s_no_aura    = 'Аура отсутствует'
+            }
+        }
     }
 }
 
-local localization_strings = {
-    english = {
-        s_group      = 'Group',
-        f_group      = 'Group %d',
-        f_group_cnt  = '%d of %d',
-        s_party      = 'Party',
-        s_raid       = 'Raid',
-        s_no_aura    = 'You do not have aura'
-    },
-    russian = {
-        s_group      = 'Группа',
-        f_group      = 'Группа %d',
-        f_group_cnt  = '%d из %d',
-        s_party      = 'Группа',
-        s_raid       = 'Рейд',
-        s_no_aura    = 'Аура отсутствует'
-    }
-}
+function Complement(destination, source)
+    if destination == nil and source == nil then
+        return nil
+    end
+    if source == nil then 
+        return destination
+    end
+    if destination == nil then
+        if type(source) == 'table' then
+            local result = { }
+            for key, value in pairs(source) do
+                result[key] = Complement(result[key], source[key])
+            end
+            return result
+        end
+        return source
+    end
+    if type(destination) == 'table' then
+        if type(source) ~= 'table' then error() end
+
+        local result = Complement(result, destination)
+        for key, value in pairs(source) do
+            result[key] = Complement(destination[key], source[key])
+        end
+        return result
+    end
+
+    if type(source) == 'table' then error() end
+    return destination
+end
+
+-- REIMPLEMENT CUSTOMIZATIONS --
+
+aura_env.config = Complement(aura_env.config, aura_customz)
 
 aura_env.helpers = {
 }
@@ -518,6 +599,9 @@ aura_env.runtime.helpers.GetFrame = GetFrame
 local client_locale = GetLocale();
 local locale = blizzard_locale_to_localization[client_locale]
 
+local loc_a = aura_env.config.localization.auras[locale]
+local loc_s = aura_env.config.localization.strings[locale]
+
 if aura_env.helpers.AuraIsInDebug() then
     print('Aura version: 0.1')
 end
@@ -546,6 +630,18 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 xoffset   = aura_config.glow.xoffset, 
                 yoffset   = aura_config.glow.yoffset, 
                 path      = aura_config.glow.path
+            }
+        }
+
+        local runtime_aura_tooltip = { 
+            localization = {
+                s_aura       = loc_a[aura_name],
+                s_group      = loc_s.s_group,
+                f_group      = loc_s.f_group,
+                f_group_cnt  = loc_s.f_group_cnt,
+                s_party      = loc_s.s_party,
+                s_raid       = loc_s.s_raid,
+                s_no_aura    = loc_s.s_no_aura
             }
         }
         
@@ -667,25 +763,9 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     GameTooltip:Hide()
             end)
             aura_frames[aura_name] = frame
-
         end
 
-
-
-        local loc_a = localization_auras[locale]
-        local loc_s = localization_strings[locale]
-
         aura_env.runtime.config[aura_name] = runtime_aura_config
-        aura_env.runtime.tooltips[aura_name] = { 
-            localization = {
-                s_aura       = loc_a[aura_name],
-                s_group      = loc_s.s_group,
-                f_group      = loc_s.f_group,
-                f_group_cnt  = loc_s.f_group_cnt,
-                s_party      = loc_s.s_party,
-                s_raid       = loc_s.s_raid,
-                s_no_aura    = loc_s.s_no_aura
-            }
-        }
+        aura_env.runtime.tooltips[aura_name] = runtime_aura_tooltip
     end
 end
