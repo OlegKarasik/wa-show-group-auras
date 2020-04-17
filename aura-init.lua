@@ -125,11 +125,36 @@ local aura_customz = {
     }
 }
 
+function Complement(destination, source)
+    if destination == nil and source == nil then
+        return nil
+    end
+    if source == nil then 
+        return destination
+    end
+    if destination == nil then
+        if type(source) == 'table' then
+            return Complement({ }, source)
+        end
+        return source
+    end
+    if type(destination) == 'table' then
+        if type(source) ~= 'table' then error() end
+
+        local result = Complement(result, destination)
+        for key, value in pairs(source) then
+            result[key] = Complement(destination[key], source[key])
+        end
+        return result
+    end
+
+    if type(source) == 'table' then error() end
+    return destination
+end
+
 -- REIMPLEMENT CUSTOMIZATIONS --
 
-if not aura_env.config              then aura_env.config              = aura_customz end
-if not aura_env.config.auras        then aura_env.config.auras        = aura_customz.auras end
-if not aura_env.config.localization then aura_env.config.localization = aura_customz.localization end
+aura_env.config = Complement(aura_env.config, aura_customz)
 
 aura_env.helpers = {
 }
