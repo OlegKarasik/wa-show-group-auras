@@ -8,6 +8,7 @@
 --     [0-9] = true / false
 --   }
 --   glow = {
+--     enable
 --     count 
 --     speed 
 --     length
@@ -72,20 +73,38 @@ local blizzard_locale_to_localization = {
 local aura_customz = { 
     auras = {
         [1] = { 
-            name = 'arcane-intellect'
+            name = 'arcane-intellect',
+            glow = {
+                enable = false
+            }
         },
         [2] = { 
-            name = 'divine-spirit'
+            name = 'divine-spirit',
+            glow = {
+                enable = false
+            }
         },
         [3] = { 
-            name = 'mark-of-the-wild'
+            name = 'mark-of-the-wild',
+            glow = {
+                enable = false
+            }
         },
         [4] = { 
-            name = 'power-word-fortitude'
+            name = 'power-word-fortitude',
+            glow = {
+                enable = false
+            }
         },
         [5] = { 
-            name = 'shadow-protection'
+            name = 'shadow-protection',
+            glow = {
+                enable = false
+            }
         }
+    },
+    internal = {
+        debug = false
     },
     localization = {
         auras = {
@@ -134,7 +153,11 @@ function Complement(destination, source)
     end
     if destination == nil then
         if type(source) == 'table' then
-            return Complement({ }, source)
+            local result = { }
+            for key, value in pairs(source) do
+                result[key] = Complement(result[key], source[key])
+            end
+            return result
         end
         return source
     end
@@ -142,7 +165,7 @@ function Complement(destination, source)
         if type(source) ~= 'table' then error() end
 
         local result = Complement(result, destination)
-        for key, value in pairs(source) then
+        for key, value in pairs(source) do
             result[key] = Complement(destination[key], source[key])
         end
         return result
