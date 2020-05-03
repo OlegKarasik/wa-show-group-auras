@@ -762,6 +762,15 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 function ()
                     GameTooltip:Hide()
             end)
+            frame:SetScript(
+                "OnMouseDown",
+                function (self, button)
+                    print(self)
+                    print(button)
+                    if button == 'RightButton' and IsShiftKeyDown() then 
+                        print('SHIFT: Mouse down event')
+                    end
+            end)
             aura_frames[aura_name] = frame
         end
 
