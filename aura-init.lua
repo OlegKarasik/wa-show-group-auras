@@ -19,6 +19,13 @@
 --   } 
 -- }
 
+-- CONSTANTS -- 
+
+NORMAL_FONT_COLOR = CreateColor(1.0, 0.82, 0.0)
+WHITE_FONT_COLOR  = CreateColor(1.0, 1.0, 1.0)
+GREEN_FONT_COLOR  = CreateColor(0.1, 1.0, 0.1)
+GRAY_FONT_COLOR	  = CreateColor(0.5, 0.5, 0.5)
+
 -- CONFIGURATION MAPPINGS --
 
 local auras_to_blizzard_auras = {
@@ -125,20 +132,24 @@ local aura_customz = {
         },
         strings = {
             english = {
-                s_group      = 'Group',
-                f_group      = 'Group %d',
-                f_group_cnt  = '%d of %d',
-                s_party      = 'Party',
-                s_raid       = 'Raid',
-                s_no_aura    = 'You do not have aura'
+                s_raid              = 'Raid',
+                s_group             = 'Group',
+                s_party             = 'Party',
+                f_footnotes         = 'Right click to print this information into %s channel',
+                f_group             = 'Group %d',
+                f_group_cnt         = '%d of %d',
+                f_out_raid_heading  = '"%s" is missed on',
+                f_out_party_heading = '"%s" is missed on'
             },
             russian = {
+                s_raid       = 'Рейд',
                 s_group      = 'Группа',
+                s_party      = 'Группа',
+                f_footnotes  = 'Щелкните правой клавишей мыши чтобы отправить эту информацию в канал %s',
                 f_group      = 'Группа %d',
                 f_group_cnt  = '%d из %d',
-                s_party      = 'Группа',
-                s_raid       = 'Рейд',
-                s_no_aura    = 'Аура отсутствует'
+                f_out_raid_heading  = '"%s" отсутсвует на',
+                f_out_party_heading = '"%s" отсутсвует на'
             }
         }
     }
@@ -603,7 +614,7 @@ local loc_a = aura_env.config.localization.auras[locale]
 local loc_s = aura_env.config.localization.strings[locale]
 
 if aura_env.helpers.AuraIsInDebug() then
-    print('Aura version: 0.1')
+    print('Aura version: 1.0.1')
 end
 
 for _, aura_config in ipairs(aura_env.config.auras) do
@@ -635,13 +646,15 @@ for _, aura_config in ipairs(aura_env.config.auras) do
 
         local runtime_aura_tooltip = { 
             localization = {
-                s_aura       = loc_a[aura_name],
-                s_group      = loc_s.s_group,
-                f_group      = loc_s.f_group,
-                f_group_cnt  = loc_s.f_group_cnt,
-                s_party      = loc_s.s_party,
-                s_raid       = loc_s.s_raid,
-                s_no_aura    = loc_s.s_no_aura
+                s_aura              = loc_a[aura_name],
+                s_raid              = loc_s.s_raid,
+                s_group             = loc_s.s_group,
+                s_party             = loc_s.s_party,
+                f_footnotes         = loc_s.f_footnotes,
+                f_group             = loc_s.f_group,
+                f_group_cnt         = loc_s.f_group_cnt,
+                f_out_raid_heading  = loc_s.f_out_raid_heading,
+                f_out_party_heading = loc_s.f_out_party_heading
             }
         }
         
@@ -719,10 +732,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         -- Name
                         -- ... etc
 
-                        GameTooltip:AddDoubleLine(localization.s_aura, localization.s_raid, 1, 1, 1, 0.5, 0.5, 0.5)
+                        GameTooltip:AddDoubleLine(
+                            localization.s_aura, 
+                            localization.s_raid, 
+                            WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 
+                            GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+
                         GameTooltip:AddLine(' ')
 
-                        local is_empty = true
                         for index, raid_group_index in ipairs(sraid_groups) do
                             local raid_group = raid_groups[raid_group_index]
 
@@ -730,29 +747,54 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                                 GameTooltip:AddDoubleLine(
                                     string.format(localization.f_group, raid_group_index),
                                     string.format(localization.f_group_cnt, raid_group.buffed, raid_group.unbuffed + raid_group.buffed), 
-                                    nil, nil, nil, 
-                                    0.5, 0.5, 0.5)
+                                    NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
+                                    GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
-                                GameTooltip:AddLine(table.concat(raid_group.units, ', '), 1, 1, 1)
-
-                                is_empty = false
+                                GameTooltip:AddLine(
+                                    table.concat(raid_group.units, ', '), 
+                                    WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
                             end
                         end
-                        if is_empty then 
-                            GameTooltip:AddLine('There is no one left without buffs', 1, 1, 1)
-                        end
-                    elseif IsInGroup() then
-                        GameTooltip:AddDoubleLine(localization.s_aura, localization.s_party, 1, 1, 1, 0.5, 0.5, 0.5)
+
                         GameTooltip:AddLine(' ')
-                        GameTooltip:AddLine(localization.s_group)
+                        GameTooltip:AddLine(
+                            string.format(localization.f_footnotes, string.lower(localization.s_raid)),
+                            GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                    elseif IsInGroup() then
+                        -- Update tooltip content using the following template:
+                        -- Aura                      Party
+                        --
+                        -- Group
+                        -- Name
+                        -- Name
+                        -- ... etc
+
+                        GameTooltip:AddDoubleLine(
+                            localization.s_aura, 
+                            localization.s_party, 
+                            WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 
+                            GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+
+                        GameTooltip:AddLine(' ')
+
+                        GameTooltip:AddLine(
+                            localization.s_group,
+                            NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
 
                         for unit, aura_match in pairs(state.units) do
                             if aura_match then
-                                GameTooltip:AddLine(aura_env.helpers.UnitNameSafe(unit), 1, 1, 1)
+                                GameTooltip:AddLine(
+                                    aura_env.helpers.UnitNameSafe(unit), 
+                                    WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
                             end
                         end
+
+                        GameTooltip:AddLine(' ')
+                        GameTooltip:AddLine(
+                            string.format(localization.f_footnotes, string.lower(localization.s_party)),
+                            GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
                     else
-                        GameTooltip:AddLine(localization.s_no_aura)
+                        error('The aura is supposed to be active in raid or group only.')
                     end
 
                     GameTooltip:Show()
@@ -765,10 +807,86 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             frame:SetScript(
                 "OnMouseDown",
                 function (self, button)
-                    print(self)
-                    print(button)
-                    if button == 'RightButton' and IsShiftKeyDown() then 
-                        print('SHIFT: Mouse down event')
+                    if button == 'RightButton' then 
+                        local state = aura_env.runtime.tooltips[aura_name].state
+                        if not state then 
+                            return
+                        end
+
+                        local localization = aura_env.runtime.tooltips[aura_name].localization
+
+                        if IsInRaid() then 
+                            -- Prints information about raid auras using the following template:
+                            -- "Aura" is missed on the following raid members:
+                            -- > Group 1: Name, Name
+                            -- > Group 2: Name
+                            -- ... etc
+
+                            local raid_groups = { }
+                            for unit, aura_match in pairs(state.units) do
+                                local raid_index = UnitInRaid(unit)
+                                if raid_index then
+                                    local _, _, raid_group_index = GetRaidRosterInfo(raid_index)
+                                    if aura_match then
+                                        local raid_group = raid_groups[raid_group_index]
+                                        if not raid_group then
+                                            raid_group = { units = { } }
+                                            raid_groups[raid_group_index] = raid_group
+                                        end
+
+                                        tinsert(raid_group.units, aura_env.helpers.UnitNameSafe(unit))
+                                    end
+                                end
+                            end
+
+                            local sraid_groups = { }
+                            for raid_group_index in pairs(raid_groups) do
+                                tinsert(sraid_groups, raid_group_index)
+                            end
+                            table.sort(sraid_groups, function(x, y) return x < y end)
+
+                            SendChatMessage(
+                                string.format(
+                                    '%s:', 
+                                    string.format(localization.f_out_raid_heading, localization.s_aura)), 
+                                'RAID')    
+
+                            for _, raid_group_index in ipairs(sraid_groups) do
+                                local raid_group = raid_groups[raid_group_index]
+                                if raid_group then
+                                    SendChatMessage(
+                                        string.format('> %s: %s',
+                                            string.format(localization.f_group, raid_group_index),
+                                            table.concat(raid_group.units, ', ')),
+                                        'RAID');
+                                end
+                            end
+                        elseif IsInGroup() then
+                            -- Prints information about group auras using the following template:
+                            -- "Aura" is missed on the following party members:
+                            -- > Name
+                            -- > Name
+                            -- ... etc
+
+                            local group = { units = { } }
+                            for unit, aura_match in pairs(state.units) do
+                                if aura_match then
+                                    tinsert(group.units, aura_env.helpers.UnitNameSafe(unit))
+                                end
+                            end
+
+                            SendChatMessage(
+                                string.format(
+                                    '%s:', 
+                                    string.format(localization.f_out_party_heading, localization.s_aura)), 
+                                'PARTY')
+
+                            for _, unit in ipairs(group.units) do
+                                SendChatMessage(string.format('> %s', unit), "PARTY")
+                            end
+                        else
+                            error('The aura is supposed to be active in raid or group only.')
+                        end
                     end
             end)
             aura_frames[aura_name] = frame
