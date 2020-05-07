@@ -759,7 +759,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         GameTooltip:AddLine(' ')
                         GameTooltip:AddLine(
                             string.format(localization.f_footnotes, string.lower(localization.s_raid)),
-                            GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                            GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, 1)
                     elseif IsInGroup() then
                         -- Update tooltip content using the following template:
                         -- Aura                      Party
@@ -792,7 +792,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         GameTooltip:AddLine(' ')
                         GameTooltip:AddLine(
                             string.format(localization.f_footnotes, string.lower(localization.s_party)),
-                            GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b)
+                            GREEN_FONT_COLOR.r, GREEN_FONT_COLOR.g, GREEN_FONT_COLOR.b, 1)
                     else
                         error('The aura is supposed to be active in raid or group only.')
                     end
