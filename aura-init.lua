@@ -890,8 +890,8 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     end
             end)
 
-            -- We need to hide frame initially, because at first aura initialization raid or group
-            -- is buffer (nothing to show) the transparent frame will still react on mouse events
+            -- We need to hide frame initially, because if at first aura initialization raid or group
+            -- has all buffs (nothing to show), the transparent frame will react on mouse events
             -- and cause errors
             frame:Hide()
 
