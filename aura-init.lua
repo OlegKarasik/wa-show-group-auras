@@ -889,6 +889,13 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         end
                     end
             end)
+
+            -- We need to hide frame initially, because at first aura initialization raid or group
+            -- is buffer (nothing to show) the transparent frame will still react on mouse events
+            -- and cause errors
+            frame:Hide()
+
+            -- Store frame
             aura_frames[aura_name] = frame
         end
 
