@@ -863,7 +863,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             end
                         elseif IsInGroup() then
                             -- Prints information about group auras using the following template:
-                            -- "Aura" is missed on the following party members:
+                            -- "Aura" is missed on:
                             -- > Name
                             -- > Name
                             -- ... etc
