@@ -47,12 +47,17 @@ local auras_to_blizzard_auras = {
     [4] = {
         name = 'power-word-fortitude',
         icon = 135987,
-        levels = { 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243}
+        levels = { 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243 }
     },
     [5] = {
         name = 'shadow-protection',
         icon = 136121,
-        levels = { 27683, 10958, 10957, 976}
+        levels = { 27683, 10958, 10957, 976 }
+    },
+    [6] = {
+        name = 'thorns',
+        icon = 136104,
+        levels = { 467, 782, 1075, 8914, 9756, 9910 }
     }
 }
 
@@ -108,6 +113,12 @@ local aura_customz = {
             glow = {
                 enable = false
             }
+        },
+        [6] = { 
+            name = 'thorns',
+            glow = {
+                enable = false
+            }
         }
     },
     internal = {
@@ -120,14 +131,16 @@ local aura_customz = {
                 ['divine-spirit'] = 'Divine Spirit',
                 ['mark-of-the-wild'] = 'Mark of the Wild',
                 ['power-word-fortitude'] = 'Power Word: Fortitude',
-                ['shadow-protection'] = 'Shadow Protection'
+                ['shadow-protection'] = 'Shadow Protection',
+                ['thorns'] = 'Thorns'
             },
             russian = {
                 ['arcane-intellect'] = 'Чародейский интеллект',
                 ['divine-spirit'] = 'Божественный дух',
                 ['mark-of-the-wild'] = 'Знак дикой природы',
                 ['power-word-fortitude'] = 'Слово силы: Стойкость',
-                ['shadow-protection'] = 'Защиты от темной магии'
+                ['shadow-protection'] = 'Защиты от темной магии',
+                ['thorns'] = 'Шипы'
             }
         },
         strings = {
