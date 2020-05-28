@@ -115,6 +115,19 @@ function(allstates, event, unit)
         
         return true
     end
+    if event == 'GROUP_LEFT' then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('TRIGGER: GROUP_LEFT')
+        end
+
+        for aura_name, _ in pairs(aura_env.runtime.config) do
+            if aura_env.helpers.AuraIsInDebug() then
+                print('Hidding tooltip frame for '..aura_name)
+            end
+        
+            aura_env.runtime.helpers.TooltipHide(aura_name)
+        end
+    end
     if event == 'PLAYER_REGEN_DISABLED' then
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: PLAYER_REGEN_DISABLED')
