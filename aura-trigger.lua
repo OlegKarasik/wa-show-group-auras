@@ -61,6 +61,22 @@ function(allstates, event, unit)
             end
             return false
         end
+
+        if not IsInGroup() and not IsInRaid() then
+            if aura_env.helpers.AuraIsInDebug() then
+                print('TRIGGER: Leaving group or raid, disabling') 
+            end
+
+            for aura_name, _ in pairs(aura_env.runtime.config) do
+                aura_env.runtime.helpers.TooltipHide(aura_name)
+
+                allstates[aura_name] = {
+                    show = false,
+                    changed = true
+                }
+            end
+            return true
+        end
         
         -- Initialize empty auras states
         local states = { }
@@ -115,22 +131,15 @@ function(allstates, event, unit)
         
         return true
     end
-    if event == 'GROUP_LEFT' then
-        if aura_env.helpers.AuraIsInDebug() then
-            print('TRIGGER: GROUP_LEFT')
-        end
-
-        for aura_name, _ in pairs(aura_env.runtime.config) do
-            if aura_env.helpers.AuraIsInDebug() then
-                print('Hidding tooltip frame for '..aura_name)
-            end
-        
-            aura_env.runtime.helpers.TooltipHide(aura_name)
-        end
-    end
     if event == 'PLAYER_REGEN_DISABLED' then
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: PLAYER_REGEN_DISABLED')
+        end
+
+        if not IsInGroup() and not IsInRaid() then
+            if aura_env.helpers.AuraIsInDebug() then
+                print('TRIGGER: No group or raid, ignoring') 
+            end
         end
         
         if aura_env.helpers.AuraIsInDebug() then
@@ -175,6 +184,12 @@ function(allstates, event, unit)
     if event == 'PLAYER_REGEN_ENABLED' then
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: PLAYER_REGEN_ENABLED')
+        end
+
+        if not IsInGroup() and not IsInRaid() then
+            if aura_env.helpers.AuraIsInDebug() then
+                print('TRIGGER: No group or raid, ignoring') 
+            end
         end
         
         if aura_env.helpers.AuraIsInDebug() then
@@ -237,6 +252,12 @@ function(allstates, event, unit)
     if event == 'UNIT_AURA' and unit then
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: UNIT_AURA')
+        end
+
+        if not IsInGroup() and not IsInRaid() then
+            if aura_env.helpers.AuraIsInDebug() then
+                print('TRIGGER: No group or raid, ignoring') 
+            end
         end
         
         if aura_env.runtime.helpers.IsInCombat() then
