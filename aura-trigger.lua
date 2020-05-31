@@ -64,7 +64,7 @@ function(allstates, event, unit)
 
         if not IsInGroup() and not IsInRaid() then
             if aura_env.helpers.AuraIsInDebug() then
-                print('TRIGGER: Leaving group or raid, disabling') 
+                print('TRIGGER: No group or raid, disabling') 
             end
 
             for aura_name, _ in pairs(aura_env.runtime.config) do
@@ -140,6 +140,7 @@ function(allstates, event, unit)
             if aura_env.helpers.AuraIsInDebug() then
                 print('TRIGGER: No group or raid, ignoring') 
             end
+            return false
         end
         
         if aura_env.helpers.AuraIsInDebug() then
@@ -190,6 +191,7 @@ function(allstates, event, unit)
             if aura_env.helpers.AuraIsInDebug() then
                 print('TRIGGER: No group or raid, ignoring') 
             end
+            return false
         end
         
         if aura_env.helpers.AuraIsInDebug() then
@@ -258,6 +260,7 @@ function(allstates, event, unit)
             if aura_env.helpers.AuraIsInDebug() then
                 print('TRIGGER: No group or raid, ignoring') 
             end
+            return false
         end
         
         if aura_env.runtime.helpers.IsInCombat() then
