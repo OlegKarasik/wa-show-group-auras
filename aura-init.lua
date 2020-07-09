@@ -154,6 +154,8 @@ local aura_customz = {
                 s_raid              = 'Raid',
                 s_group             = 'Group',
                 s_party             = 'Party',
+                s_party_no_casters  = 'No one is your party can cast this aura',
+                s_raid_no_casters   = 'No one is your raid can cast this aura',
                 f_casters           = '%s can cast this aura',
                 f_footnotes         = 'Right click to print this information into /%s channel',
                 f_group             = 'Group %d',
@@ -165,6 +167,8 @@ local aura_customz = {
                 s_raid              = 'Рейд',
                 s_group             = 'Группа',
                 s_party             = 'Группа',
+                s_party_no_casters  = 'Никто в вашей группе не может наложить этот эффект',
+                s_raid_no_casters   = 'Никто в вашем рейде не может наложить этот эффект',
                 f_casters           = '%s может наложить этот эффект',
                 f_footnotes         = 'Щелкните правой клавишей мыши чтобы отправить эту информацию в канал /%s',
                 f_group             = 'Группа %d',
@@ -672,6 +676,8 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 s_raid              = loc_s.s_raid,
                 s_group             = loc_s.s_group,
                 s_party             = loc_s.s_party,
+                s_party_no_casters  = loc_s.s_party_no_casters,
+                s_raid_no_casters   = loc_s.s_raid_no_casters,
                 f_casters           = loc_s.f_casters,
                 f_footnotes         = loc_s.f_footnotes,
                 f_group             = loc_s.f_group,
@@ -774,6 +780,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             GameTooltip:AddLine(
                                 string.format(localization.f_casters, table.concat(raid_casters.units, ', ')),
                                 WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
+                        else
+                            GameTooltip:AddLine(
+                                localization.s_raid_no_casters,
+                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
                         end
 
                         GameTooltip:AddLine(' ')
@@ -827,6 +837,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         if group_casters.count  > 0 then
                             GameTooltip:AddLine(
                                 string.format(localization.f_casters, table.concat(group_casters.units, ', ')),
+                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
+                        else
+                            GameTooltip:AddLine(
+                                localization.s_party_no_casters,
                                 WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
                         end
 

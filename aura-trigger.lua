@@ -109,7 +109,9 @@ function(allstates, event, unit)
 
             -- Group units by class
             local _, english_class = UnitClass(unit)
-            classes_units[english_class][unit] = true
+            if english_class then
+                classes_units[english_class][unit] = true
+            end
         end
 
         for aura_name, state in pairs(states) do
@@ -242,7 +244,9 @@ function(allstates, event, unit)
 
             -- Group units by class
             local _, english_class = UnitClass(unit)
-            classes_units[english_class][unit] = true
+            if english_class then
+                classes_units[english_class][unit] = true
+            end
         end
 
         for _, state in pairs(states) do
