@@ -31,31 +31,37 @@ GRAY_FONT_COLOR	  = CreateColor(0.5, 0.5, 0.5)
 local auras_to_blizzard_auras = {
     [1] = {
         name = 'arcane-intellect',
+        source = 'MAGE',
         icon = 135932,
         levels = { 23028, 10157, 10156, 1461, 1460, 1459 }
     },
     [2] = {
         name = 'divine-spirit',
+        source = 'PRIEST',
         icon = 135898,
         levels = { 27681, 27841, 14819, 14818, 14752 }
     },
     [3] = {
         name = 'mark-of-the-wild',
+        source = 'DRUID',
         icon = 136078,
         levels = { 21850, 21849, 9885, 9884, 8907, 5234, 6756, 5232, 1126 }
     },
     [4] = {
         name = 'power-word-fortitude',
+        source = 'PRIEST',
         icon = 135987,
         levels = { 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243 }
     },
     [5] = {
         name = 'shadow-protection',
+        source = 'PRIEST',
         icon = 136121,
         levels = { 27683, 10958, 10957, 976 }
     },
     [6] = {
         name = 'thorns',
+        source = 'DRUID',
         icon = 136104,
         levels = { 467, 782, 1075, 8914, 9756, 9910 }
     }
@@ -148,6 +154,7 @@ local aura_customz = {
                 s_raid              = 'Raid',
                 s_group             = 'Group',
                 s_party             = 'Party',
+                f_casters           = '%s can cast this aura',
                 f_footnotes         = 'Right click to print this information into /%s channel',
                 f_group             = 'Group %d',
                 f_group_cnt         = '%d of %d',
@@ -155,12 +162,13 @@ local aura_customz = {
                 f_out_party_heading = '"%s" is missed on'
             },
             russian = {
-                s_raid       = 'Рейд',
-                s_group      = 'Группа',
-                s_party      = 'Группа',
-                f_footnotes  = 'Щелкните правой клавишей мыши чтобы отправить эту информацию в канал /%s',
-                f_group      = 'Группа %d',
-                f_group_cnt  = '%d из %d',
+                s_raid              = 'Рейд',
+                s_group             = 'Группа',
+                s_party             = 'Группа',
+                f_casters           = '%s может наложить этот эффект',
+                f_footnotes         = 'Щелкните правой клавишей мыши чтобы отправить эту информацию в канал /%s',
+                f_group             = 'Группа %d',
+                f_group_cnt         = '%d из %d',
                 f_out_raid_heading  = '"%s" отсутсвует на',
                 f_out_party_heading = '"%s" отсутсвует на'
             }
@@ -641,6 +649,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         local runtime_aura_config = {
             id = 'aura:'..aura_name,
             name = aura_name,
+            source = blizzard_aura.source,
             icon = blizzard_aura.icon,
             levels = blizzard_aura.levels,
             classes = { },
@@ -663,6 +672,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 s_raid              = loc_s.s_raid,
                 s_group             = loc_s.s_group,
                 s_party             = loc_s.s_party,
+                f_casters           = loc_s.f_casters,
                 f_footnotes         = loc_s.f_footnotes,
                 f_group             = loc_s.f_group,
                 f_group_cnt         = loc_s.f_group_cnt,
@@ -705,6 +715,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     if IsInRaid() then 
                         local buffed, unbuffed = 0, 0
                         local raid_groups = { }
+                        local raid_casters = { count = 0, units = { } }
                         for unit, aura_match in pairs(state.units) do
                             local raid_index = UnitInRaid(unit)
                             if raid_index then
@@ -725,8 +736,12 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                                     buffed = buffed + 1
                                     raid_group.buffed = raid_group.buffed + 1
                                 end
-
                             end
+                        end
+                        for unit in pairs(state.casters) do
+                            raid_casters.count = raid_casters.count + 1
+
+                            tinsert(raid_casters.units, aura_env.helpers.UnitNameSafe(unit))
                         end
 
                         local sraid_groups = { }
@@ -736,7 +751,9 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         table.sort(sraid_groups, function(x, y) return x < y end)
 
                         -- Update tooltip content using the following template:
-                        -- Aura               Raid, 5 of 8
+                        -- Aura                       Raid
+                        -- Name, Name, Name can cast this
+                        -- aura
                         --
                         -- Group 1                  3 of 5
                         -- Name, Name
@@ -744,12 +761,20 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         -- Group 2                  2 of 3
                         -- Name
                         -- ... etc
+                        --
+                        -- Right click to print this information into /raid channel
 
                         GameTooltip:AddDoubleLine(
                             localization.s_aura, 
                             localization.s_raid, 
-                            WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 
+                            NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+
+                        if raid_casters.count  > 0 then
+                            GameTooltip:AddLine(
+                                string.format(localization.f_casters, table.concat(raid_casters.units, ', ')),
+                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
+                        end
 
                         GameTooltip:AddLine(' ')
 
@@ -776,17 +801,34 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     elseif IsInGroup() then
                         -- Update tooltip content using the following template:
                         -- Aura                      Party
+                        -- Name, Name, Name can cast this
+                        -- aura
                         --
                         -- Group
                         -- Name
                         -- Name
                         -- ... etc
+                        --
+                        -- Right click to print this information into /group channel
 
                         GameTooltip:AddDoubleLine(
                             localization.s_aura, 
                             localization.s_party, 
-                            WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 
+                            NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
+
+                        local group_casters = { count = 0, units = { } }
+                        for unit in pairs(state.casters) do
+                            group_casters.count = group_casters.count + 1
+
+                            tinsert(group_casters.units, aura_env.helpers.UnitNameSafe(unit))
+                        end
+
+                        if group_casters.count  > 0 then
+                            GameTooltip:AddLine(
+                                string.format(localization.f_casters, table.concat(group_casters.units, ', ')),
+                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
+                        end
 
                         GameTooltip:AddLine(' ')
 

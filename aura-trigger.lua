@@ -6,8 +6,11 @@ function(allstates, event, unit)
             if not state then
                 state = {
                     icon = aura_result.config.icon,
+                    source = aura_result.config.source,
                     matchCount = 0,
                     units = { 
+                    },
+                    casters = {
                     },
                     tooltip = {
                     }
@@ -83,6 +86,11 @@ function(allstates, event, unit)
         
         -- Iterate over raid or party restoring auras states for each unit
         local unit_results = { }
+        local classes_units = { 
+            ['WARRIOR'] = { }, ['PALADIN'] = { }, ['HUNTER'] = { }, 
+            ['ROGUE']   = { }, ['PRIEST']  = { }, ['SHAMAN'] = { }, 
+            ['MAGE']    = { }, ['WARLOCK'] = { }, ['DRUID']  = { } 
+        }
         
         for unit in WA_IterateGroupMembers() do
             -- Include unit into unit_results
@@ -98,6 +106,14 @@ function(allstates, event, unit)
                 -- Set unit aura results
                 unit_results[unit] = aura_results
             end
+
+            -- Group units by class
+            local _, english_class = UnitClass(unit)
+            classes_units[english_class][unit] = true
+        end
+
+        for aura_name, state in pairs(states) do
+            state.casters = classes_units[state.source]
         end
         
         -- Visual Update
@@ -203,6 +219,11 @@ function(allstates, event, unit)
         
         -- Iterate over raid or party restoring auras states for each unit
         local unit_results = { }
+        local classes_units = { 
+            ['WARRIOR'] = { }, ['PALADIN'] = { }, ['HUNTER'] = { }, 
+            ['ROGUE']   = { }, ['PRIEST']  = { }, ['SHAMAN'] = { }, 
+            ['MAGE']    = { }, ['WARLOCK'] = { }, ['DRUID']  = { } 
+        }
         
         for unit in WA_IterateGroupMembers() do
             -- Include unit into unit_results
@@ -218,6 +239,14 @@ function(allstates, event, unit)
                 -- Set unit aura results
                 unit_results[unit] = aura_results
             end
+
+            -- Group units by class
+            local _, english_class = UnitClass(unit)
+            classes_units[english_class][unit] = true
+        end
+
+        for _, state in pairs(states) do
+            state.casters = classes_units[state.source]
         end
         
         -- Visual Update
@@ -355,9 +384,12 @@ function(allstates, event, unit)
                         show = true,
                         changed = true,
                         icon = aura_result.config.icon,
+                        source = aura_result.config.source,
                         matchCount = 1,
                         units = {
                             [unit] = true
+                        },
+                        casters = {
                         },
                         tooltip = {
                         }
