@@ -632,6 +632,85 @@ aura_env.runtime.helpers.LeaveCombat = LeaveCombat
 aura_env.runtime.helpers.ClearFrameCache = ClearFrameCache
 aura_env.runtime.helpers.GetFrame = GetFrame
 
+-- LOCAL FUNCTIONS USED IN HOOKS AND STUFF 
+
+local function OutputFormatRaid(state, localization, print_group)
+    local buffed, unbuffed = 0, 0
+    local raid_groups = { }
+    for unit, aura_match in pairs(state.units) do
+        local raid_index = UnitInRaid(unit)
+        if raid_index then
+            local _, _, raid_group_index = GetRaidRosterInfo(raid_index)
+
+            local raid_group = raid_groups[raid_group_index]
+            if not raid_group then
+                raid_group = { unbuffed = 0, buffed = 0, units = { } }
+                raid_groups[raid_group_index] = raid_group
+            end
+
+            if aura_match then
+                unbuffed = unbuffed + 1
+                raid_group.unbuffed = raid_group.unbuffed + 1
+
+                tinsert(raid_group.units, aura_env.helpers.UnitNameSafe(unit))
+            else
+                buffed = buffed + 1
+                raid_group.buffed = raid_group.buffed + 1
+            end
+        end
+    end
+
+    local sraid_groups = { }
+    for raid_group_index in pairs(raid_groups) do
+        tinsert(sraid_groups, raid_group_index)
+    end
+    table.sort(sraid_groups, function(x, y) return x < y end)
+
+    for index, raid_group_index in ipairs(sraid_groups) do
+        local raid_group = raid_groups[raid_group_index]
+
+        if raid_group.unbuffed > 0 then
+            print_group(
+                string.format(localization.f_group, raid_group_index),
+                string.format(localization.f_group_cnt, raid_group.buffed, raid_group.unbuffed + raid_group.buffed),
+                table.concat(raid_group.units, ', '))
+        end
+    end
+end
+
+local function OutputFormatParty(state, localization, print_member)
+    for unit, aura_match in pairs(state.units) do
+        if aura_match then
+            print_member(aura_env.helpers.UnitNameSafe(unit))
+        end
+    end
+end
+
+local function OutputFormatCasters(state, localization, print_all_casters)
+    local casters = { count = 0, units = { } }
+    for unit in pairs(state.casters) do
+        casters.count = casters.count + 1
+
+        tinsert(casters.units, aura_env.helpers.UnitNameSafe(unit))
+    end
+
+    local value = nil
+
+    if IsInRaid() then
+        value = localization.s_raid_no_casters
+    elseif IsInGroup() then
+        value = localization.s_party_no_casters
+    end
+
+    if casters.count == 1 then
+        value = string.format(localization.f_casters, table.concat(casters.units, ', '))
+    elseif casters.count > 1 then
+        value = string.format(localization.f_casters_pl, table.concat(casters.units, ', ', 1, casters.count - 1), casters.units[casters.count])
+    end
+
+    print_all_casters(value)
+end
+
 -- AURA INITIALIZATION --
 
 local client_locale = GetLocale();
@@ -722,47 +801,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     local localization = aura_env.runtime.tooltips[aura_name].localization
 
                     if IsInRaid() then 
-                        local buffed, unbuffed = 0, 0
-                        local raid_groups = { }
-                        local raid_casters = { count = 0, units = { } }
-                        for unit, aura_match in pairs(state.units) do
-                            local raid_index = UnitInRaid(unit)
-                            if raid_index then
-                                local _, _, raid_group_index = GetRaidRosterInfo(raid_index)
-
-                                local raid_group = raid_groups[raid_group_index]
-                                if not raid_group then
-                                    raid_group = { unbuffed = 0, buffed = 0, units = { } }
-                                    raid_groups[raid_group_index] = raid_group
-                                end
-
-                                if aura_match then
-                                    unbuffed = unbuffed + 1
-                                    raid_group.unbuffed = raid_group.unbuffed + 1
-
-                                    tinsert(raid_group.units, aura_env.helpers.UnitNameSafe(unit))
-                                else
-                                    buffed = buffed + 1
-                                    raid_group.buffed = raid_group.buffed + 1
-                                end
-                            end
-                        end
-                        for unit in pairs(state.casters) do
-                            raid_casters.count = raid_casters.count + 1
-
-                            tinsert(raid_casters.units, aura_env.helpers.UnitNameSafe(unit))
-                        end
-
-                        local sraid_groups = { }
-                        for raid_group_index in pairs(raid_groups) do
-                            tinsert(sraid_groups, raid_group_index)
-                        end
-                        table.sort(sraid_groups, function(x, y) return x < y end)
-
                         -- Update tooltip content using the following template:
                         -- Aura                       Raid
-                        -- Name, Name and Name can cast this
-                        -- aura
+                        -- Name, Name and Name can cast 
+                        -- this aura
                         --
                         -- Group 1                  3 of 5
                         -- Name, Name
@@ -771,7 +813,8 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         -- Name
                         -- ... etc
                         --
-                        -- Right click to print this information into /raid channel
+                        -- Right click to print this 
+                        -- information into /raid channel
 
                         GameTooltip:AddDoubleLine(
                             localization.s_aura, 
@@ -779,37 +822,29 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
-                        if raid_casters.count == 1 then
-                            GameTooltip:AddLine(
-                                string.format(localization.f_casters, table.concat(raid_casters.units, ', ')),
-                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
-                        elseif raid_casters.count > 1 then
-                            GameTooltip:AddLine(
-                                string.format(localization.f_casters_pl, table.concat(raid_casters.units, ', ', 1, raid_casters.count - 1), raid_casters.units[raid_casters.count]),
-                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
-                        else
-                            GameTooltip:AddLine(
-                                localization.s_raid_no_casters,
-                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
-                        end
+                        OutputFormatCasters(
+                            state, 
+                            localization,
+                            function (all_casters_str) 
+                                GameTooltip:AddLine(all_casters_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1) 
+                            end);
 
                         GameTooltip:AddLine(' ')
 
-                        for index, raid_group_index in ipairs(sraid_groups) do
-                            local raid_group = raid_groups[raid_group_index]
-
-                            if raid_group.unbuffed > 0 then
+                        OutputFormatRaid(
+                            state,
+                            localization,
+                            function (group_str, group_cnts_str, group_members_str)
                                 GameTooltip:AddDoubleLine(
-                                    string.format(localization.f_group, raid_group_index),
-                                    string.format(localization.f_group_cnt, raid_group.buffed, raid_group.unbuffed + raid_group.buffed), 
+                                    group_str,
+                                    group_cnts_str, 
                                     NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                                     GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
                                 GameTooltip:AddLine(
-                                    table.concat(raid_group.units, ', '), 
+                                    group_members_str, 
                                     WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
-                            end
-                        end
+                            end)
 
                         GameTooltip:AddLine(' ')
                         GameTooltip:AddLine(
@@ -818,15 +853,16 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     elseif IsInGroup() then
                         -- Update tooltip content using the following template:
                         -- Aura                      Party
-                        -- Name, Name and Name can cast this
-                        -- aura
+                        -- Name, Name and Name can cast 
+                        -- this aura
                         --
                         -- Group
                         -- Name
                         -- Name
                         -- ... etc
                         --
-                        -- Right click to print this information into /group channel
+                        -- Right click to print this 
+                        -- information into /group channel
 
                         GameTooltip:AddDoubleLine(
                             localization.s_aura, 
@@ -834,26 +870,12 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
-                        local group_casters = { count = 0, units = { } }
-                        for unit in pairs(state.casters) do
-                            group_casters.count = group_casters.count + 1
-
-                            tinsert(group_casters.units, aura_env.helpers.UnitNameSafe(unit))
-                        end
-
-                        if group_casters.count == 1 then
-                            GameTooltip:AddLine(
-                                string.format(localization.f_casters, table.concat(group_casters.units, ', ')),
-                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
-                        elseif group_casters.count > 1 then
-                            GameTooltip:AddLine(
-                                string.format(localization.f_casters_pl, table.concat(group_casters.units, ', ', 1, group_casters.count - 1), group_casters.units[group_casters.count]),
-                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
-                        else
-                            GameTooltip:AddLine(
-                                localization.s_party_no_casters,
-                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
-                        end
+                        OutputFormatCasters(
+                            state, 
+                            localization,
+                            function (all_casters_str) 
+                                GameTooltip:AddLine(all_casters_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1) 
+                            end);
 
                         GameTooltip:AddLine(' ')
 
@@ -861,13 +883,12 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             localization.s_group,
                             NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b)
 
-                        for unit, aura_match in pairs(state.units) do
-                            if aura_match then
-                                GameTooltip:AddLine(
-                                    aura_env.helpers.UnitNameSafe(unit), 
-                                    WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b)
-                            end
-                        end
+                        OutputFormatParty(
+                            state, 
+                            localization,
+                            function (member_str) 
+                                GameTooltip:AddLine(member_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b) 
+                            end);
 
                         GameTooltip:AddLine(' ')
                         GameTooltip:AddLine(
@@ -901,59 +922,33 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             -- > Group 1: Name, Name
                             -- > Group 2: Name
                             -- ... etc
-
-                            local raid_groups = { }
-                            for unit, aura_match in pairs(state.units) do
-                                local raid_index = UnitInRaid(unit)
-                                if raid_index then
-                                    local _, _, raid_group_index = GetRaidRosterInfo(raid_index)
-                                    if aura_match then
-                                        local raid_group = raid_groups[raid_group_index]
-                                        if not raid_group then
-                                            raid_group = { units = { } }
-                                            raid_groups[raid_group_index] = raid_group
-                                        end
-
-                                        tinsert(raid_group.units, aura_env.helpers.UnitNameSafe(unit))
-                                    end
-                                end
-                            end
-
-                            local sraid_groups = { }
-                            for raid_group_index in pairs(raid_groups) do
-                                tinsert(sraid_groups, raid_group_index)
-                            end
-                            table.sort(sraid_groups, function(x, y) return x < y end)
-
+                            -- * Name, Name and Name can cast this aura
                             SendChatMessage(
                                 string.format(
                                     '%s:', 
                                     string.format(localization.f_out_raid_heading, localization.s_aura)), 
                                 'RAID')    
 
-                            for _, raid_group_index in ipairs(sraid_groups) do
-                                local raid_group = raid_groups[raid_group_index]
-                                if raid_group then
-                                    SendChatMessage(
-                                        string.format('> %s: %s',
-                                            string.format(localization.f_group, raid_group_index),
-                                            table.concat(raid_group.units, ', ')),
-                                        'RAID');
-                                end
-                            end
+                            OutputFormatRaid(
+                                state,
+                                localization,
+                                function (group_str, _, group_members_str)
+                                    SendChatMessage(string.format('> %s: %s', group_str, group_members_str), 'RAID');
+                                end)
+
+                            OutputFormatCasters(
+                                state, 
+                                localization,
+                                function (all_casters_str) 
+                                    SendChatMessage('* '..all_casters_str, 'RAID') 
+                                end);
                         elseif IsInGroup() then
                             -- Prints information about group auras using the following template:
                             -- "Aura" is missed on:
                             -- > Name
                             -- > Name
                             -- ... etc
-
-                            local group = { units = { } }
-                            for unit, aura_match in pairs(state.units) do
-                                if aura_match then
-                                    tinsert(group.units, aura_env.helpers.UnitNameSafe(unit))
-                                end
-                            end
+                            -- * Name, Name and Name can cast this aura
 
                             SendChatMessage(
                                 string.format(
@@ -961,9 +956,19 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                                     string.format(localization.f_out_party_heading, localization.s_aura)), 
                                 'PARTY')
 
-                            for _, unit in ipairs(group.units) do
-                                SendChatMessage(string.format('> %s', unit), "PARTY")
-                            end
+                            OutputFormatParty(  
+                                state, 
+                                localization,
+                                function (member_str) 
+                                    SendChatMessage('> '..member_str, "PARTY") 
+                                end);
+
+                            OutputFormatCasters(
+                                state, 
+                                localization,
+                                function (all_casters_str) 
+                                    SendChatMessage('* '..all_casters_str, 'PARTY') 
+                                end);
                         else
                             error('The aura is supposed to be active in raid or group only.')
                         end
