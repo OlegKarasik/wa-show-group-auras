@@ -154,9 +154,10 @@ local aura_customz = {
                 s_raid              = 'Raid',
                 s_group             = 'Group',
                 s_party             = 'Party',
-                s_party_no_casters  = 'No one is your party can cast this aura',
-                s_raid_no_casters   = 'No one is your raid can cast this aura',
+                s_party_no_casters  = 'No one in party can cast this aura',
+                s_raid_no_casters   = 'No one in raid can cast this aura',
                 f_casters           = '%s can cast this aura',
+                f_casters_pl        = '%s and %s can cast this aura',
                 f_footnotes         = 'Right click to print this information into /%s channel',
                 f_group             = 'Group %d',
                 f_group_cnt         = '%d of %d',
@@ -167,9 +168,10 @@ local aura_customz = {
                 s_raid              = 'Рейд',
                 s_group             = 'Группа',
                 s_party             = 'Группа',
-                s_party_no_casters  = 'Никто в вашей группе не может наложить этот эффект',
-                s_raid_no_casters   = 'Никто в вашем рейде не может наложить этот эффект',
+                s_party_no_casters  = 'Никто в группе не может наложить этот эффект',
+                s_raid_no_casters   = 'Никто в рейде не может наложить этот эффект',
                 f_casters           = '%s может наложить этот эффект',
+                f_casters_pl        = '%s и %s могут наложить этот эффект',
                 f_footnotes         = 'Щелкните правой клавишей мыши чтобы отправить эту информацию в канал /%s',
                 f_group             = 'Группа %d',
                 f_group_cnt         = '%d из %d',
@@ -679,6 +681,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 s_party_no_casters  = loc_s.s_party_no_casters,
                 s_raid_no_casters   = loc_s.s_raid_no_casters,
                 f_casters           = loc_s.f_casters,
+                f_casters_pl        = loc_s.f_casters_pl,
                 f_footnotes         = loc_s.f_footnotes,
                 f_group             = loc_s.f_group,
                 f_group_cnt         = loc_s.f_group_cnt,
@@ -758,7 +761,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
 
                         -- Update tooltip content using the following template:
                         -- Aura                       Raid
-                        -- Name, Name, Name can cast this
+                        -- Name, Name and Name can cast this
                         -- aura
                         --
                         -- Group 1                  3 of 5
@@ -776,9 +779,13 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
-                        if raid_casters.count  > 0 then
+                        if raid_casters.count == 1 then
                             GameTooltip:AddLine(
                                 string.format(localization.f_casters, table.concat(raid_casters.units, ', ')),
+                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
+                        elseif raid_casters.count > 1 then
+                            GameTooltip:AddLine(
+                                string.format(localization.f_casters_pl, table.concat(raid_casters.units, ', ', 1, raid_casters.count - 1), raid_casters.units[raid_casters.count]),
                                 WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
                         else
                             GameTooltip:AddLine(
@@ -811,7 +818,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     elseif IsInGroup() then
                         -- Update tooltip content using the following template:
                         -- Aura                      Party
-                        -- Name, Name, Name can cast this
+                        -- Name, Name and Name can cast this
                         -- aura
                         --
                         -- Group
@@ -834,9 +841,13 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             tinsert(group_casters.units, aura_env.helpers.UnitNameSafe(unit))
                         end
 
-                        if group_casters.count  > 0 then
+                        if group_casters.count == 1 then
                             GameTooltip:AddLine(
                                 string.format(localization.f_casters, table.concat(group_casters.units, ', ')),
+                                WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
+                        elseif group_casters.count > 1 then
+                            GameTooltip:AddLine(
+                                string.format(localization.f_casters_pl, table.concat(group_casters.units, ', ', 1, group_casters.count - 1), group_casters.units[group_casters.count]),
                                 WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1)
                         else
                             GameTooltip:AddLine(
