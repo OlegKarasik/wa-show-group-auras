@@ -94,36 +94,72 @@ local aura_customz = {
             name = 'arcane-intellect',
             glow = {
                 enable = false
+            },
+            display = {
+                casters = true,
+            },
+            print = {
+                casters = true
             }
         },
         [2] = { 
             name = 'divine-spirit',
             glow = {
                 enable = false
+            },
+            display = {
+                casters = true,
+            },
+            print = {
+                casters = true
             }
         },
         [3] = { 
             name = 'mark-of-the-wild',
             glow = {
                 enable = false
+            },
+            display = {
+                casters = true,
+            },
+            print = {
+                casters = true
             }
         },
         [4] = { 
             name = 'power-word-fortitude',
             glow = {
                 enable = false
+            },
+            display = {
+                casters = true,
+            },
+            print = {
+                casters = true
             }
         },
         [5] = { 
             name = 'shadow-protection',
             glow = {
                 enable = false
+            },
+            display = {
+                casters = true,
+            },
+            print = {
+                casters = true
             }
         },
         [6] = { 
             name = 'thorns',
             glow = {
                 enable = false
+            },
+            display = {
+                casters = true,
+            },
+            print = {
+                casters = true
             }
         }
     },
@@ -752,6 +788,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         }
 
         local runtime_aura_tooltip = { 
+            settings = {
+                display = {
+                    casters = aura_config.display.casters,
+                },
+                print = {
+                    casters = aura_config.print.casters
+                }
+            },
             localization = {
                 s_aura              = loc_a[aura_name],
                 s_raid              = loc_s.s_raid,
@@ -822,12 +866,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
-                        OutputFormatCasters(
-                            state, 
-                            localization,
-                            function (all_casters_str) 
-                                GameTooltip:AddLine(all_casters_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1) 
-                            end);
+                        if settings.display.casters then
+                            OutputFormatCasters(
+                                state, 
+                                localization,
+                                function (all_casters_str) 
+                                    GameTooltip:AddLine(all_casters_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1) 
+                                end);
+                        end
 
                         GameTooltip:AddLine(' ')
 
@@ -870,12 +916,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             NORMAL_FONT_COLOR.r, NORMAL_FONT_COLOR.g, NORMAL_FONT_COLOR.b, 
                             GRAY_FONT_COLOR.r, GRAY_FONT_COLOR.g, GRAY_FONT_COLOR.b)
 
-                        OutputFormatCasters(
-                            state, 
-                            localization,
-                            function (all_casters_str) 
-                                GameTooltip:AddLine(all_casters_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1) 
-                            end);
+                        if settings.display.casters then
+                            OutputFormatCasters(
+                                state, 
+                                localization,
+                                function (all_casters_str) 
+                                    GameTooltip:AddLine(all_casters_str, WHITE_FONT_COLOR.r, WHITE_FONT_COLOR.g, WHITE_FONT_COLOR.b, 1) 
+                                end);
+                        end
 
                         GameTooltip:AddLine(' ')
 
@@ -914,6 +962,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                             return
                         end
 
+                        local settings = aura_env.runtime.tooltips[aura_name].settings
                         local localization = aura_env.runtime.tooltips[aura_name].localization
 
                         if IsInRaid() then 
@@ -936,12 +985,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                                     SendChatMessage(string.format('> %s: %s', group_str, group_members_str), 'RAID');
                                 end)
 
-                            OutputFormatCasters(
-                                state, 
-                                localization,
-                                function (all_casters_str) 
-                                    SendChatMessage('* '..all_casters_str, 'RAID') 
-                                end);
+                            if settings.print.casters then
+                                OutputFormatCasters(
+                                    state, 
+                                    localization,
+                                    function (all_casters_str) 
+                                        SendChatMessage('* '..all_casters_str, 'RAID') 
+                                    end);
+                            end
                         elseif IsInGroup() then
                             -- Prints information about group auras using the following template:
                             -- "Aura" is missed on:
@@ -963,12 +1014,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                                     SendChatMessage('> '..member_str, "PARTY") 
                                 end);
 
-                            OutputFormatCasters(
-                                state, 
-                                localization,
-                                function (all_casters_str) 
-                                    SendChatMessage('* '..all_casters_str, 'PARTY') 
-                                end);
+                            if settings.print.casters then
+                                OutputFormatCasters(
+                                    state, 
+                                    localization,
+                                    function (all_casters_str) 
+                                        SendChatMessage('* '..all_casters_str, 'PARTY') 
+                                    end);
+                            end
                         else
                             error('The aura is supposed to be active in raid or group only.')
                         end
