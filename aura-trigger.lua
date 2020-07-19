@@ -6,8 +6,11 @@ function(allstates, event, unit)
             if not state then
                 state = {
                     icon = aura_result.config.icon,
+                    source = aura_result.config.source,
                     matchCount = 0,
                     units = { 
+                    },
+                    casters = {
                     },
                     tooltip = {
                     }
@@ -21,6 +24,46 @@ function(allstates, event, unit)
 
             state.units[unit] = not aura_result.match
         end
+    end
+    local function FillStatesWithGroupMembersInformation()
+        -- Initialize empty auras states
+        local states = { }
+        
+        -- Iterate over raid or party restoring auras states for each unit
+        local unit_results = { }
+        local classes_units = { 
+            ['WARRIOR'] = { }, ['PALADIN'] = { }, ['HUNTER'] = { }, 
+            ['ROGUE']   = { }, ['PRIEST']  = { }, ['SHAMAN'] = { }, 
+            ['MAGE']    = { }, ['WARLOCK'] = { }, ['DRUID']  = { } 
+        }
+        
+        for unit in WA_IterateGroupMembers() do
+            -- Include unit into unit_results
+            unit_results[unit] = { }
+            
+            -- Find out whether unit matches any of the aura rules
+            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+            if match_result then 
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
+                
+                UpdateUnitAuraStates(states, unit, aura_results)
+                
+                -- Set unit aura results
+                unit_results[unit] = aura_results
+            end
+
+            -- Group units by class
+            local _, english_class = UnitClass(unit)
+            if english_class then
+                classes_units[english_class][unit] = true
+            end
+        end
+
+        for _, state in pairs(states) do
+            state.casters = classes_units[state.source]
+        end
+
+        return states, unit_results
     end
     if event == 'OPTIONS' then
         if aura_env.helpers.AuraIsInDebug() then
@@ -77,29 +120,10 @@ function(allstates, event, unit)
             end
             return true
         end
-        
-        -- Initialize empty auras states
-        local states = { }
-        
-        -- Iterate over raid or party restoring auras states for each unit
-        local unit_results = { }
-        
-        for unit in WA_IterateGroupMembers() do
-            -- Include unit into unit_results
-            unit_results[unit] = { }
-            
-            -- Find out whether unit matches any of the aura rules
-            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
-            if match_result then 
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
-                
-                UpdateUnitAuraStates(states, unit, aura_results)
-                
-                -- Set unit aura results
-                unit_results[unit] = aura_results
-            end
-        end
-        
+
+        -- Fill up states with group members information
+        local states, unit_results = FillStatesWithGroupMembersInformation()
+
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
@@ -198,27 +222,8 @@ function(allstates, event, unit)
             print('TRIGGER: Leaving combat') 
         end
         
-        -- Initialize empty auras states
-        local states = { }
-        
-        -- Iterate over raid or party restoring auras states for each unit
-        local unit_results = { }
-        
-        for unit in WA_IterateGroupMembers() do
-            -- Include unit into unit_results
-            unit_results[unit] = { }
-            
-            -- Find out whether unit matches any of the aura rules
-            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
-            if match_result then 
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
-                
-                UpdateUnitAuraStates(states, unit, aura_results)
-                
-                -- Set unit aura results
-                unit_results[unit] = aura_results
-            end
-        end
+        -- Fill up states with group members information
+        local states, unit_results = FillStatesWithGroupMembersInformation()
         
         -- Visual Update
         aura_env.helpers.DelayExecution(
@@ -355,9 +360,12 @@ function(allstates, event, unit)
                         show = true,
                         changed = true,
                         icon = aura_result.config.icon,
+                        source = aura_result.config.source,
                         matchCount = 1,
                         units = {
                             [unit] = true
+                        },
+                        casters = {
                         },
                         tooltip = {
                         }
