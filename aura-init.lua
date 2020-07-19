@@ -842,6 +842,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                         return
                     end
 
+                    local settings = aura_env.runtime.tooltips[aura_name].settings
                     local localization = aura_env.runtime.tooltips[aura_name].localization
 
                     if IsInRaid() then 
