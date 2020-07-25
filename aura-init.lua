@@ -370,6 +370,8 @@ aura_env.runtime = {
     },
     tooltips = {
     },
+    settings = {
+    },
     combat = false
 }
 
