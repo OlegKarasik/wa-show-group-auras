@@ -300,8 +300,8 @@ end
 -- Customized version of User-defined wait function
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
-local function DelayExecution(f)
-    local capture_aura_env = aura_env
+local function DelayExecution(f, a_e)
+    local capture_aura_env = a_e
 
     -- WaitQueue is a global variable
     -- It is required to be global to ensure
@@ -319,9 +319,9 @@ local function DelayExecution(f)
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
-                if not aura_env then 
-                    aura_env = capture_aura_env 
-                end
+                -- We forcible set aura_env to make sure
+                -- this action is executed in right context
+                aura_env = capture_aura_env 
                 
                 local count = #WaitQueue
                 
@@ -829,7 +829,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
         end
         if not aura_frames[aura_name] then
             -- Create non-secure frame with UIParent
-            local frame = CreateFrame("Frame", runtime_aura_config.id, UIParent)
+            local frame = CreateFrame("Frame", nil, UIParent)
 
             -- Set frame strata to DIALOG to ensure it will overlay aura icons
             frame:SetFrameStrata("DIALOG")

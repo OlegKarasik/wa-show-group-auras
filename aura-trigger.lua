@@ -142,7 +142,8 @@ function(allstates, event, unit)
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit)
                     aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_results)
                 end
-        end)
+            end,
+            aura_env)
         --
         
         -- Control aura display
@@ -199,7 +200,8 @@ function(allstates, event, unit)
                 for unit in pairs(units_to_fade) do
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit)
                 end
-        end)
+            end,
+            aura_env)
         --
         
         aura_env.runtime.helpers.EnterCombat()
@@ -241,7 +243,8 @@ function(allstates, event, unit)
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit)
                     aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_results)
                 end
-        end)
+            end,
+            aura_env)
         --
         
         -- Control aura display
@@ -327,7 +330,8 @@ function(allstates, event, unit)
                             end
 
                             aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
-                    end)
+                        end,
+                        aura_env)
                     --
                     
                     result = true
@@ -383,7 +387,8 @@ function(allstates, event, unit)
                         end
                         
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
-                end)
+                    end,
+                    aura_env)
                 --
                 
                 result = true
