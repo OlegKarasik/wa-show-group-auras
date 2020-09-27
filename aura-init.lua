@@ -9,20 +9,20 @@
 --   }
 --   glow = {
 --     enable
---     count 
---     speed 
+--     count
+--     speed
 --     length
 --     thickness
---     xoffset 
---     yoffset 
+--     xoffset
+--     yoffset
 --     path
---   } 
+--   }
 -- }
 
 -- GLOBAL --
 local G = _G
 
--- CONSTANTS -- 
+-- CONSTANTS --
 
 local NORMAL_FONT_COLOR = CreateColor(1.0, 0.82, 0.0)
 local WHITE_FONT_COLOR  = CreateColor(1.0, 1.0, 1.0)
