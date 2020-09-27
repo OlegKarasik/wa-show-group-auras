@@ -306,9 +306,7 @@ end
 -- Customized version of User-defined wait function
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
-local function DelayExecution(f, a_e)
-    local capture_aura_env = a_e
-
+local function DelayExecution(f, env)
     -- WaitQueue is a global variable
     -- It is required to be global to ensure
     -- life-time binding between WaitQueue and WaitQueueFrame
@@ -336,24 +334,38 @@ local function DelayExecution(f, a_e)
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
-                -- We forcible set aura_env to make sure
-                -- this action is executed in right context
-                aura_env = capture_aura_env 
-                
                 local count = #WaitQueue
                 
                 local i = 1
                 while i <= count do
-                    local fn = tremove(WaitQueue, i)
-                    if fn then 
-                        fn()
+                    local closure = tremove(WaitQueue, i)
+                    if closure then 
+                        -- We forcible set aura_env to make sure
+                        -- this action is executed in right context
+                        aura_env = closure.environment
+    
+                        local current_tick = aura_env.runtime.helpers.GetGeneratorTick()
+                        if closure.tick ~= current_tick then
+                            if aura_env.helpers.AuraIsInDebug() then
+                                print('- Skipping delayed action because generator ticks do not match')
+                            end
+                        else
+                            closure.callback()
+                        end
                     end
+                    
                     i = i + 1
                 end
         end)
     end
     
-    tinsert(WaitQueue, f)
+    tinsert(
+        WaitQueue, 
+        {
+            environment = env,
+            callback = f,
+            tick = env.runtime.helpers.GetGeneratorTick()
+        })
     return true
 end
 
@@ -389,7 +401,8 @@ aura_env.runtime = {
     },
     settings = {
     },
-    combat = false
+    combat = false,
+    tick = 0
 }
 
 -- RUNTIME HELPERS --
@@ -589,6 +602,19 @@ local function ClearFrameCache()
     aura_env.runtime.frames = { }
 end
 
+local function IncrementGeneratorTick()
+    local tick = aura_env.runtime.tick;
+    if aura_env.helpers.AuraIsInDebug() then
+        print('HELPER: Incrementing generator tick from: '..tostring(tick))
+    end
+
+    aura_env.runtime.tick = aura_env.runtime.tick + 1
+end
+
+local function GetGeneratorTick()
+    return aura_env.runtime.tick
+end
+
 -- These frame functions are slightly modified
 -- version of GetFrameGeneric function --
 -- from: https://wago.io/GetFrameGeneric
@@ -686,6 +712,8 @@ aura_env.runtime.helpers.TooltipUpdateContent = TooltipUpdateContent
 aura_env.runtime.helpers.IsInCombat  = IsInCombat
 aura_env.runtime.helpers.EnterCombat = EnterCombat
 aura_env.runtime.helpers.LeaveCombat = LeaveCombat
+aura_env.runtime.helpers.IncrementGeneratorTick = IncrementGeneratorTick
+aura_env.runtime.helpers.GetGeneratorTick = GetGeneratorTick
 aura_env.runtime.helpers.ClearFrameCache = ClearFrameCache
 aura_env.runtime.helpers.GetFrame = GetFrame
 
