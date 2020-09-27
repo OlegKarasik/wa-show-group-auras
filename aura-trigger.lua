@@ -69,6 +69,10 @@ function (allstates, event, unit)
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: OPTIONS')
         end
+
+        -- We are reloading the aura, just increment the tick
+        aura_env.runtime.helpers.IncrementGeneratorTick()
+
         -- We aren't deferring this execution to a frame
         -- event loop because we actually don't expect dynamic
         -- changes here
@@ -104,6 +108,10 @@ function (allstates, event, unit)
             end
             return false
         end
+
+        -- Increment the tick to ensure no previously posted 
+        -- visual updates will be processed
+        aura_env.runtime.helpers.IncrementGeneratorTick()
 
         if not IsInGroup() and not IsInRaid() then
             if aura_env.helpers.AuraIsInDebug() then
@@ -171,6 +179,10 @@ function (allstates, event, unit)
         if aura_env.helpers.AuraIsInDebug() then
             print('TRIGGER: Entering combat') 
         end
+
+        -- Increment the tick to ensure no previously posted 
+        -- visual updates will be processed
+        aura_env.runtime.helpers.IncrementGeneratorTick()
         
         -- Iterate over the states and 
         -- include all units with auras to fade table

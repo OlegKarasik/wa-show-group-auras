@@ -13,7 +13,7 @@ std = {
         "type",
         "select",
         "table",
-        
+        "tostring",
 
         -- Weak auras
         "aura_env",
