@@ -9,22 +9,29 @@
 --   }
 --   glow = {
 --     enable
---     count 
---     speed 
+--     count
+--     speed
 --     length
 --     thickness
---     xoffset 
---     yoffset 
+--     xoffset
+--     yoffset
 --     path
---   } 
+--   }
 -- }
 
--- CONSTANTS -- 
+-- GLOBAL --
+local G = _G
 
-NORMAL_FONT_COLOR = CreateColor(1.0, 0.82, 0.0)
-WHITE_FONT_COLOR  = CreateColor(1.0, 1.0, 1.0)
-GREEN_FONT_COLOR  = CreateColor(0.1, 1.0, 0.1)
-GRAY_FONT_COLOR	  = CreateColor(0.5, 0.5, 0.5)
+-- CONSTANTS --
+
+local NORMAL_FONT_COLOR = CreateColor(1.0, 0.82, 0.0)
+local WHITE_FONT_COLOR  = CreateColor(1.0, 1.0, 1.0)
+local GREEN_FONT_COLOR  = CreateColor(0.1, 1.0, 0.1)
+local GRAY_FONT_COLOR   = CreateColor(0.5, 0.5, 0.5)
+
+local GLOBAL_WAIT_QUEUE_ID       = aura_env.id..'-wa-show-group-auras-wait-queue'
+local GLOBAL_WAIT_QUEUE_FRAME_ID = aura_env.id..'-wa-show-group-auras-wait-frame'
+local GLOBAL_AURA_FRAMES         = aura_env.id..'-wa-show-group-auras-frames'
 
 -- CONFIGURATION MAPPINGS --
 
@@ -218,7 +225,7 @@ local aura_customz = {
     }
 }
 
-function Complement(destination, source)
+local function Complement(destination, source)
     if destination == nil and source == nil then
         return nil
     end
@@ -228,7 +235,7 @@ function Complement(destination, source)
     if destination == nil then
         if type(source) == 'table' then
             local result = { }
-            for key, value in pairs(source) do
+            for key in pairs(source) do
                 result[key] = Complement(result[key], source[key])
             end
             return result
@@ -238,11 +245,10 @@ function Complement(destination, source)
     if type(destination) == 'table' then
         if type(source) ~= 'table' then error() end
 
-        local result = Complement(result, destination)
-        for key, value in pairs(source) do
-            result[key] = Complement(destination[key], source[key])
+        for key in pairs(source) do
+            destination[key] = Complement(destination[key], source[key])
         end
-        return result
+        return destination
     end
 
     if type(source) == 'table' then error() end
@@ -307,15 +313,26 @@ local function DelayExecution(f, a_e)
     -- It is required to be global to ensure
     -- life-time binding between WaitQueue and WaitQueueFrame
 
+    local WaitQueue = G[GLOBAL_WAIT_QUEUE_ID]
     if not WaitQueue then
+        if aura_env.helpers.AuraIsInDebug() then
+            print('- Initializing wait queue')
+        end
+
         WaitQueue = { }
+        G[GLOBAL_WAIT_QUEUE_ID] = WaitQueue
     end
     
     -- WaitQueueFrame is a global variable
     -- It is required to reuse the same frame
     
+    local WaitQueueFrame = G[GLOBAL_WAIT_QUEUE_FRAME_ID]
     if not WaitQueueFrame then
-        WaitQueueFrame = CreateFrame("Frame", "WaitFrame", UIParent)
+        if aura_env.helpers.AuraIsInDebug() then
+            print('- Initializing wait queue frame')
+        end
+
+        WaitQueueFrame = CreateFrame("Frame", GLOBAL_WAIT_QUEUE_FRAME_ID, UIParent)
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
@@ -424,9 +441,9 @@ local function UnitMatchAuraActivationRules(unit)
 end
 
 local function UnitHasAuras(unit, match_result)
-    local name = nil
+    local unit_name = nil
     if aura_env.helpers.AuraIsInDebug() then
-        name = aura_env.helpers.UnitNameSafe(unit)
+        unit_name = aura_env.helpers.UnitNameSafe(unit)
     end
     
     local aura_result = { }
@@ -436,7 +453,7 @@ local function UnitHasAuras(unit, match_result)
                 local name = WA_GetUnitAura(unit, level)
                 if name then
                     if aura_env.helpers.AuraIsInDebug() then
-                        print('HELPER: '..name..' ('..unit..') has '..name..' aura')
+                        print('HELPER: '..unit_name..' ('..unit..') has '..name..' aura')
                     end
                     
                     aura_result[aura_name] = {
@@ -468,7 +485,7 @@ end
 
 local function UnitFadeAllAuras(unit)
     local frame = nil
-    for aura_name, aura_config in pairs(aura_env.runtime.config) do
+    for _, aura_config in pairs(aura_env.runtime.config) do
         if aura_config.glow.enable then
             if not frame then 
                 frame = aura_env.runtime.helpers.GetFrame(unit)
@@ -492,7 +509,7 @@ end
 
 local function UnitGlowAllAuras(unit, aura_results)
     local frame = nil
-    for aura_name, aura_result in pairs(aura_results) do
+    for _, aura_result in pairs(aura_results) do
         if aura_result.config.glow.enable and not aura_result.match then
             if not frame then 
                 -- Lazely initialize frame
@@ -512,6 +529,7 @@ local function UnitGlowAllAuras(unit, aura_results)
 end
 
 local function TooltipHide(aura_name)
+    local aura_frames = G[GLOBAL_AURA_FRAMES]
     local frame = aura_frames[aura_name]
     if frame then
         if aura_env.helpers.AuraIsInDebug() then
@@ -523,6 +541,7 @@ local function TooltipHide(aura_name)
 end
 
 local function TooltipShow(aura_name)
+    local aura_frames = G[GLOBAL_AURA_FRAMES]
     local frame = aura_frames[aura_name]
     if frame then
         if aura_env.helpers.AuraIsInDebug() then
@@ -704,7 +723,7 @@ local function OutputFormatRaid(state, localization, print_group)
     end
     table.sort(sraid_groups, function(x, y) return x < y end)
 
-    for index, raid_group_index in ipairs(sraid_groups) do
+    for _, raid_group_index in ipairs(sraid_groups) do
         local raid_group = raid_groups[raid_group_index]
 
         if raid_group.unbuffed > 0 then
@@ -758,7 +777,7 @@ local loc_a = aura_env.config.localization.auras[locale]
 local loc_s = aura_env.config.localization.strings[locale]
 
 if aura_env.helpers.AuraIsInDebug() then
-    print('Aura version: 1.0.1')
+    print('Aura version: 1.1.1')
 end
 
 for _, aura_config in ipairs(aura_env.config.auras) do
@@ -824,10 +843,16 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             runtime_aura_config.classes[blizzard_class] = enabled   
         end
         
+        local aura_frames = G[GLOBAL_AURA_FRAMES]
         if not aura_frames then
             aura_frames = { }
+            G[GLOBAL_AURA_FRAMES] = aura_frames
         end
         if not aura_frames[aura_name] then
+            if aura_env.helpers.AuraIsInDebug() then
+                print('- Initializing : '..aura_name..' frame')
+            end
+
             -- Create non-secure frame with UIParent
             local frame = CreateFrame("Frame", nil, UIParent)
 

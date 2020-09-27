@@ -1,4 +1,4 @@
-function(allstates, event, unit)
+function (allstates, event, unit)
     local function UpdateUnitAuraStates(states, unit, aura_results)
         for aura_name, aura_result in pairs(aura_results) do
             local state = states[aura_name]
@@ -37,25 +37,25 @@ function(allstates, event, unit)
             ['MAGE']    = { }, ['WARLOCK'] = { }, ['DRUID']  = { } 
         }
         
-        for unit in WA_IterateGroupMembers() do
+        for member in WA_IterateGroupMembers() do
             -- Include unit into unit_results
-            unit_results[unit] = { }
+            unit_results[member] = { }
             
             -- Find out whether unit matches any of the aura rules
-            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
+            local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(member)
             if match_result then 
-                local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
+                local aura_results = aura_env.runtime.helpers.UnitHasAuras(member, match_result)
                 
-                UpdateUnitAuraStates(states, unit, aura_results)
+                UpdateUnitAuraStates(states, member, aura_results)
                 
                 -- Set unit aura results
-                unit_results[unit] = aura_results
+                unit_results[member] = aura_results
             end
 
             -- Group units by class
-            local _, english_class = UnitClass(unit)
+            local _, english_class = UnitClass(member)
             if english_class then
-                classes_units[english_class][unit] = true
+                classes_units[english_class][member] = true
             end
         end
 
@@ -75,7 +75,7 @@ function(allstates, event, unit)
 
         -- Iterate over all auras and hide their tooltips
         -- This is required to ensure proper initial state after aura reinitialization
-        for aura_name, aura_config in pairs(aura_env.runtime.config) do
+        for aura_name in pairs(aura_env.runtime.config) do
             aura_env.runtime.helpers.TooltipHide(aura_name)
         end
 
@@ -84,9 +84,9 @@ function(allstates, event, unit)
         
         -- Iterate over raid or party and clear all possible auras
         -- This is required to enable "aura enable / disable functionality"
-        for unit in WA_IterateGroupMembers() do
-            for aura_name, aura_config in pairs(aura_env.runtime.config) do
-                local frame = aura_env.runtime.helpers.GetFrame(unit)
+        for member in WA_IterateGroupMembers() do
+            for _, aura_config in pairs(aura_env.runtime.config) do
+                local frame = aura_env.runtime.helpers.GetFrame(member)
                 if frame then
                     aura_env.helpers.Fade(frame, aura_config)
                 end
@@ -138,9 +138,9 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for unit, aura_results in pairs(unit_results) do
-                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
-                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_results)
+                for unit_in_question, aura_results in pairs(unit_results) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(unit_in_question)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(unit_in_question, aura_results)
                 end
             end,
             aura_env)
@@ -176,10 +176,10 @@ function(allstates, event, unit)
         -- include all units with auras to fade table
         local units_to_fade = { }
         
-        for aura_name, state in pairs(allstates) do
-            for unit, match in pairs(state.units) do
+        for _, state in pairs(allstates) do
+            for unit_in_question, match in pairs(state.units) do
                 if match then
-                    units_to_fade[unit] = true
+                    units_to_fade[unit_in_question] = true
                 end
             end
             
@@ -191,14 +191,14 @@ function(allstates, event, unit)
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
-                for aura_name, aura_config in pairs(aura_env.runtime.config) do
+                for aura_name in pairs(aura_env.runtime.config) do
                     aura_env.runtime.helpers.TooltipHide(aura_name)
                 end
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for unit in pairs(units_to_fade) do
-                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
+                for unit_to_fade in pairs(units_to_fade) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(unit_to_fade)
                 end
             end,
             aura_env)
@@ -239,9 +239,9 @@ function(allstates, event, unit)
 
                 aura_env.runtime.helpers.ClearFrameCache()
                 
-                for unit, aura_results in pairs(unit_results) do
-                    aura_env.runtime.helpers.UnitFadeAllAuras(unit)
-                    aura_env.runtime.helpers.UnitGlowAllAuras(unit, aura_results)
+                for unit_in_question, aura_results in pairs(unit_results) do
+                    aura_env.runtime.helpers.UnitFadeAllAuras(unit_in_question)
+                    aura_env.runtime.helpers.UnitGlowAllAuras(unit_in_question, aura_results)
                 end
             end,
             aura_env)
@@ -277,19 +277,19 @@ function(allstates, event, unit)
             end
             return false
         end
-        
+
         local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules(unit)
         if not match_result then
             return false
         end
-        
+
         local name = nil
         if aura_env.helpers.AuraIsInDebug() then
             name = aura_env.helpers.UnitNameSafe(unit)
         end
-        
+
         local result = false
-        
+
         local aura_results = aura_env.runtime.helpers.UnitHasAuras(unit, match_result)
         for aura_name, aura_result in pairs(aura_results) do
             local state = allstates[aura_name]
@@ -300,14 +300,14 @@ function(allstates, event, unit)
                             if aura_env.helpers.AuraIsInDebug() then
                                 print('TRIGGER: '..name..' ('..unit..') has \''..aura_name..'\', state found, no changes, skipping') 
                             end
-                            
+
                             break
                         end
-                        
+
                         if aura_env.helpers.AuraIsInDebug() then
                             print('TRIGGER: '..name..' ('..unit..') has \''..aura_name..'\', state found, marking') 
                         end
-                        
+
                         state.show = state.matchCount > 1
                         state.changed = true
                         state.matchCount = state.matchCount - 1
@@ -316,11 +316,11 @@ function(allstates, event, unit)
                         if aura_env.helpers.AuraIsInDebug() then
                             print('TRIGGER: '..name..' ('..unit..') has \''..aura_name..'\', state not found, skipping')
                         end
-                        
+
                         -- Just do nothing and proceed to next aura
                         break
                     end
-                    
+
                     -- Visual Update
                     aura_env.helpers.DelayExecution(
                         function ()
@@ -333,24 +333,24 @@ function(allstates, event, unit)
                         end,
                         aura_env)
                     --
-                    
+
                     result = true
                     break
                 end
-                
+
                 if state then
                     if state.units[unit] then
                         if aura_env.helpers.AuraIsInDebug() then
                             print('TRIGGER: '..name..' ('..unit..') has no \''..aura_name..'\', state found, no changes, skipping')
                         end
-                        
+
                         break
                     end
-                    
+
                     if aura_env.helpers.AuraIsInDebug() then
                         print('TRIGGER: '..name..' ('..unit..') has no \''..aura_name..'\', state found, marking')
                     end
-                    
+
                     state.show = true
                     state.changed = true
                     state.matchCount = state.matchCount + 1
@@ -359,7 +359,7 @@ function(allstates, event, unit)
                     if aura_env.helpers.AuraIsInDebug() then
                         print('TRIGGER: '..name..' ('..unit..') has no \''..aura_name..'\', state not found, marking')
                     end
-                    
+
                     allstates[aura_name] = {
                         show = true,
                         changed = true,
@@ -375,7 +375,7 @@ function(allstates, event, unit)
                         }
                     }
                 end
-                
+
                 -- Visual Update
                 local state = allstates[aura_name]
 
@@ -385,19 +385,18 @@ function(allstates, event, unit)
                         if state.matchCount == 1 then 
                             aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
                         end
-                        
+
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
                     end,
                     aura_env)
                 --
-                
+
                 result = true
-                break
-            until true
+            until false
         end
-        
+
         return result
     end
-    
-    return false 
+
+    return false
 end
