@@ -404,7 +404,7 @@ function (allstates, event, unit)
                 --
 
                 result = true
-            until false
+            until true
         end
 
         return result
