@@ -131,19 +131,20 @@ function (allstates, event, unit)
 
         -- Fill up states with group members information
         local states, unit_results = FillStatesWithGroupMembersInformation()
+        
+        -- Update tooltip content and visibility
+        for aura_name, state in pairs(states) do
+            if state.matchCount > 0 then
+                aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
+                aura_env.runtime.helpers.TooltipShow(aura_name)
+            else 
+                aura_env.runtime.helpers.TooltipHide(aura_name)
+            end
+        end
 
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
-                for aura_name, state in pairs(states) do
-                    if state.matchCount > 0 then
-                        aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
-                        aura_env.runtime.helpers.TooltipShow(aura_name)
-                    else 
-                        aura_env.runtime.helpers.TooltipHide(aura_name)
-                    end
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit_in_question, aura_results in pairs(unit_results) do
@@ -238,17 +239,18 @@ function (allstates, event, unit)
         
         -- Fill up states with group members information
         local states, unit_results = FillStatesWithGroupMembersInformation()
-        
+
+        -- Update tooltip content and visibility
+        for aura_name, state in pairs(states) do
+            aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
+            if state.matchCount > 0 then
+                aura_env.runtime.helpers.TooltipShow(aura_name)
+            end
+        end
+
         -- Visual Update
         aura_env.helpers.DelayExecution(
             function ()
-                for aura_name, state in pairs(states) do
-                    aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
-                    if state.matchCount > 0 then
-                        aura_env.runtime.helpers.TooltipShow(aura_name)
-                    end
-                end
-
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit_in_question, aura_results in pairs(unit_results) do
@@ -333,14 +335,15 @@ function (allstates, event, unit)
                         break
                     end
 
+                    -- Updated tooltip content and visibility
+                    aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
+                    if state.matchCount == 0 then 
+                        aura_env.runtime.helpers.TooltipHide(aura_result.config.name)
+                    end
+
                     -- Visual Update
                     aura_env.helpers.DelayExecution(
                         function ()
-                            aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
-                            if state.matchCount == 0 then 
-                                aura_env.runtime.helpers.TooltipHide(aura_result.config.name)
-                            end
-
                             aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
                         end,
                         aura_env)
@@ -388,16 +391,17 @@ function (allstates, event, unit)
                     }
                 end
 
-                -- Visual Update
                 local state = allstates[aura_name]
-
+                
+                -- Updated tooltip content
+                aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
+                if state.matchCount == 1 then 
+                    aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
+                end
+                
+                -- Visual Update
                 aura_env.helpers.DelayExecution(
                     function ()
-                        aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
-                        if state.matchCount == 1 then 
-                            aura_env.runtime.helpers.TooltipShow(aura_result.config.name)
-                        end
-
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
                     end,
                     aura_env)
