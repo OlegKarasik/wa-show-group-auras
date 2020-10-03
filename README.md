@@ -6,7 +6,7 @@ It can be helpful to people who is responsible for keeping the group buffed, and
 
 > This repository contains source code of two major aura components: a trigger and on initialization script. For fully featured aura please visit [wago.io](https://wago.io/H1DUZaJ5J)
 
-Supported buffs:
+## Supported buffs:
 
 * Arcane Intellect
 * Divine Spirit
@@ -15,11 +15,11 @@ Supported buffs:
 * Shadow Protection
 * Thorns
 
-Supported languages:
+## Supported languages:
 
 * English
 * Russian
 
-## License
+# License
 
 This code and [aura](https://wago.io/H1DUZaJ5J) are licensed under MIT license.
