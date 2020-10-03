@@ -22,4 +22,4 @@ Supported languages:
 
 ## License
 
-This code and aura on wago.io are licensed under MIT license.
+This code and [aura](https://wago.io/H1DUZaJ5J) are licensed under MIT license.
