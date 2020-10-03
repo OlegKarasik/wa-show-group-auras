@@ -19,3 +19,7 @@ Supported languages:
 
 * English
 * Russian
+
+## License
+
+This code and aura are licensed under MIT license.
