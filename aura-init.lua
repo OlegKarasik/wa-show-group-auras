@@ -892,13 +892,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
                     GameTooltip:ClearLines()
 
-                    local state = aura_env.runtime.tooltips[aura_name].state
+                    local tooltip = aura_env.runtime.tooltips[aura_name]
+                    local state = tooltip.state
                     if not state then 
                         return
                     end
 
-                    local settings = aura_env.runtime.tooltips[aura_name].settings
-                    local localization = aura_env.runtime.tooltips[aura_name].localization
+                    local settings = tooltip.settings
+                    local localization = tooltip.localization
 
                     if IsInRaid() then 
                         -- Update tooltip content using the following template:
@@ -1013,13 +1014,14 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 "OnMouseDown",
                 function (self, button)
                     if button == 'RightButton' then 
-                        local state = aura_env.runtime.tooltips[aura_name].state
+                        local tooltip = aura_env.runtime.tooltips[aura_name]
+                        local state = tooltip.state
                         if not state then 
                             return
                         end
 
-                        local settings = aura_env.runtime.tooltips[aura_name].settings
-                        local localization = aura_env.runtime.tooltips[aura_name].localization
+                        local settings = tooltip.settings
+                        local localization = tooltip.localization
 
                         if IsInRaid() then 
                             -- Prints information about raid auras using the following template:
