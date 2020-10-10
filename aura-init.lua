@@ -393,6 +393,10 @@ local frame_priority = {
 aura_env.runtime = {
     config = {
     },
+    config_cache = {
+        glow = {
+        }
+    },
     helpers = {
     },
     frames = {
@@ -498,16 +502,14 @@ end
 
 local function UnitFadeAllAuras(unit)
     local frame = nil
-    for _, aura_config in pairs(aura_env.runtime.config) do
-        if aura_config.glow.enable then
-            if not frame then 
-                frame = aura_env.runtime.helpers.GetFrame(unit)
-                if not frame then
-                    break
-                end
+    for _, aura_config in pairs(aura_env.runtime.config_cache.glow) do
+        if not frame then 
+            frame = aura_env.runtime.helpers.GetFrame(unit)
+            if not frame then
+                break
             end
-            aura_env.helpers.Fade(frame, aura_config)
         end
+        aura_env.helpers.Fade(frame, aura_config)
     end
 end
 
@@ -1097,5 +1099,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
 
         aura_env.runtime.config[aura_name] = runtime_aura_config
         aura_env.runtime.tooltips[aura_name] = runtime_aura_tooltip
+
+        if runtime_aura_config.glow.enable then 
+            -- Cache configs which have glow enabled
+            aura_env.runtime.config_cache.glow[aura_name] = runtime_aura_config
+        end
     end
 end
