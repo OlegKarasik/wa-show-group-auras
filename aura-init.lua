@@ -395,6 +395,8 @@ aura_env.runtime = {
     },
     config_cache = {
         glow = {
+        },
+        classes = {
         }
     },
     helpers = {
@@ -430,25 +432,17 @@ local function UnitMatchAuraActivationRules(unit)
         return nil
     end
     
-    local match_result = nil
-    
     -- CLASS RULES
     local _, english_class = UnitClass(unit)
-    for aura_name, aura_config in pairs(aura_env.runtime.config) do
-        if aura_config.classes[english_class] then
-            if aura_env.helpers.AuraIsInDebug() then
-                print('HELPER: '..name..' ('..unit..', '..english_class..') matched \''..aura_name..'\':\'class\' activation rule')
-            end
-            if not match_result then
-                match_result = { }
-            end
-            
-            match_result[aura_name] = true
-        end
-    end
-    
     if not english_class then
         english_class = 'UNKNOWN'
+    end
+
+    local match_result = aura_env.runtime.config_cache.classes[english_class]
+    if aura_env.helpers.AuraIsInDebug() then
+        for aura_name in pairs(match_result) do
+            print('HELPER: '..name..' ('..unit..', '..english_class..') matched \''..aura_name..'\':\'class\' activation rule')
+        end
     end
     
     if not match_result and aura_env.helpers.AuraIsInDebug() then
@@ -870,7 +864,17 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                 print('- Tracking : '..blizzard_class..' class')
             end
             
-            runtime_aura_config.classes[blizzard_class] = enabled   
+            runtime_aura_config.classes[blizzard_class] = enabled
+            
+            if enabled then
+                -- Cache class aura match result
+                local match_result = aura_env.runtime.config_cache.classes[blizzard_class]
+                if not match_result then
+                    match_result = { }
+                    aura_env.runtime.config_cache.classes[blizzard_class] = match_result
+                end
+                match_result[aura_name] = true
+            end
         end
         
         local aura_frames = G[GLOBAL_AURA_FRAMES]
