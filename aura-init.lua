@@ -397,6 +397,8 @@ aura_env.runtime = {
         glow = {
         },
         classes = {
+        },
+        classes_auras = {
         }
     },
     helpers = {
@@ -459,29 +461,41 @@ local function UnitHasAuras(unit, match_result)
     
     local aura_result = { }
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
-        if match_result[aura_name] then 
-            for _, level in ipairs(aura_config.levels) do
-                local name = WA_GetUnitAura(unit, level)
-                if name then
-                    if aura_env.helpers.AuraIsInDebug() then
-                        print('HELPER: '..unit_name..' ('..unit..') has '..name..' aura')
-                    end
-                    
-                    aura_result[aura_name] = {
-                        match = true,
-                        config = aura_config
-                    }
-                    break
-                end
-            end
-            if not aura_result[aura_name] then
-                aura_result[aura_name] = {
-                    match = false,
-                    config = aura_config
-                }
-            end
+        if match_result[aura_name] then
+            aura_result[aura_name] = {
+                match = false,
+                config = aura_config
+            }
         end
     end
+    
+    local _, english_class = UnitClass(unit)
+    if not english_class then
+        return aura_result
+    end
+
+    local class_auras = aura_env.runtime.config_cache.classes_auras[english_class]
+    if aura_env.helpers.AuraIsInDebug() then
+        print('HELPER: Scanning '..unit_name..' ('..unit..') for auras...')
+    end
+    for i = 1, 255 do
+        local name, _, _, _, _, _, _, _, _, id = UnitBuff(unit, i)
+        if not name then 
+            if aura_env.helpers.AuraIsInDebug() then
+                print('HELPER: Completed auras scan of '..unit_name..' ('..unit..')')
+            end
+            break 
+        end
+
+        local aura_config = class_auras[id]
+        if aura_config then
+            if aura_env.helpers.AuraIsInDebug() then
+                print('HELPER: '..unit_name..' ('..unit..') has '..name..' aura')
+            end
+            aura_result[aura_config.name].match = true
+        end
+    end
+
     return aura_result
 end
 
@@ -874,6 +888,16 @@ for _, aura_config in ipairs(aura_env.config.auras) do
                     aura_env.runtime.config_cache.classes[blizzard_class] = match_result
                 end
                 match_result[aura_name] = true
+
+                -- Cache class aura matched buffs
+                local class_auras = aura_env.runtime.config_cache.classes_auras[blizzard_class]
+                if not class_auras then
+                    class_auras = { }
+                    aura_env.runtime.config_cache.classes_auras[blizzard_class] = class_auras
+                end
+                for _, aura_id in ipairs(blizzard_aura.levels) do
+                    aura_env.runtime.config_cache.classes_auras[blizzard_class][aura_id] = runtime_aura_config
+                end
             end
         end
         
