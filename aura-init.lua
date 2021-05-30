@@ -40,37 +40,37 @@ local auras_to_blizzard_auras = {
         name = 'arcane-intellect',
         source = 'MAGE',
         icon = 135932,
-        levels = { 23028, 10157, 10156, 1461, 1460, 1459 }
+        levels = { 27127, 27126, 23028, 10157, 10156, 1461, 1460, 1459 }
     },
     [2] = {
         name = 'divine-spirit',
         source = 'PRIEST',
         icon = 135898,
-        levels = { 27681, 27841, 14819, 14818, 14752 }
+        levels = { 32999, 25312, 27681, 27841, 14819, 14818, 14752 }
     },
     [3] = {
         name = 'mark-of-the-wild',
         source = 'DRUID',
         icon = 136078,
-        levels = { 21850, 21849, 9885, 9884, 8907, 5234, 6756, 5232, 1126 }
+        levels = { 26991, 26990, 21850, 21849, 9885, 9884, 8907, 5234, 6756, 5232, 1126 }
     },
     [4] = {
         name = 'power-word-fortitude',
         source = 'PRIEST',
         icon = 135987,
-        levels = { 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243 }
+        levels = { 25392, 25389, 21564, 21562, 10938, 10937, 2791, 1245, 1244, 1243 }
     },
     [5] = {
         name = 'shadow-protection',
         source = 'PRIEST',
         icon = 136121,
-        levels = { 27683, 10958, 10957, 976 }
+        levels = { 39374, 25433, 27683, 10958, 10957, 976 }
     },
     [6] = {
         name = 'thorns',
         source = 'DRUID',
         icon = 136104,
-        levels = { 467, 782, 1075, 8914, 9756, 9910 }
+        levels = { 26992, 467, 782, 1075, 8914, 9756, 9910 }
     }
 }
 
