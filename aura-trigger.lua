@@ -144,15 +144,14 @@ function (allstates, event, unit)
 
         -- Visual Update
         aura_env.helpers.DelayExecution(
-            function ()
+            function (aura_env)
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit_in_question, aura_results in pairs(unit_results) do
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit_in_question)
                     aura_env.runtime.helpers.UnitGlowAllAuras(unit_in_question, aura_results)
                 end
-            end,
-            aura_env)
+            end)
         --
         
         -- Control aura display
@@ -203,7 +202,7 @@ function (allstates, event, unit)
         
         -- Visual Update
         aura_env.helpers.DelayExecution(
-            function ()
+            function (aura_env)
                 for aura_name in pairs(aura_env.runtime.config) do
                     aura_env.runtime.helpers.TooltipHide(aura_name)
                 end
@@ -213,8 +212,7 @@ function (allstates, event, unit)
                 for unit_to_fade in pairs(units_to_fade) do
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit_to_fade)
                 end
-            end,
-            aura_env)
+            end)
         --
         
         aura_env.runtime.helpers.EnterCombat()
@@ -250,15 +248,14 @@ function (allstates, event, unit)
 
         -- Visual Update
         aura_env.helpers.DelayExecution(
-            function ()
+            function (aura_env)
                 aura_env.runtime.helpers.ClearFrameCache()
                 
                 for unit_in_question, aura_results in pairs(unit_results) do
                     aura_env.runtime.helpers.UnitFadeAllAuras(unit_in_question)
                     aura_env.runtime.helpers.UnitGlowAllAuras(unit_in_question, aura_results)
                 end
-            end,
-            aura_env)
+            end)
         --
         
         -- Control aura display
@@ -343,10 +340,9 @@ function (allstates, event, unit)
 
                     -- Visual Update
                     aura_env.helpers.DelayExecution(
-                        function ()
+                        function (aura_env)
                             aura_env.runtime.helpers.UnitFadeAura(unit, aura_result.config)
-                        end,
-                        aura_env)
+                        end)
                     --
 
                     result = true
@@ -401,10 +397,9 @@ function (allstates, event, unit)
                 
                 -- Visual Update
                 aura_env.helpers.DelayExecution(
-                    function ()
+                    function (aura_env)
                         aura_env.runtime.helpers.UnitGlowAura(unit, aura_result.config)
-                    end,
-                    aura_env)
+                    end)
                 --
 
                 result = true
