@@ -850,7 +850,7 @@ local loc_a = aura_env.config.localization.auras[locale]
 local loc_s = aura_env.config.localization.strings[locale]
 
 if aura_env.helpers.AuraIsInDebug() then
-    print('Aura version: 1.1.3')
+    print('Aura version: 1.1.4')
 end
 
 for _, aura_config in ipairs(aura_env.config.auras) do
