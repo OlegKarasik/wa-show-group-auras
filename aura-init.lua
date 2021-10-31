@@ -455,11 +455,16 @@ local function UnitHasAuras(unit, match_result)
     if aura_env.helpers.AuraIsInDebug() then
         unit_name = aura_env.helpers.UnitNameSafe(unit)
     end
+    
+    local _, _, _, player_instance = UnitPosition("player")
+    local _, _, _, unit_instance = UnitPosition(unit)
 
-    -- Dead or Offline units can't have auras, so just return
+    -- Dead, Offline or out of instance / zone units can't have auras, so just return
     -- nothing without spending time on scanning
     local is_dead = false
     local is_offline = false
+    local is_in_instance = player_instance == unit_instance
+    
     if IsInRaid() then
         local raid_index = unit:match('^raid(%d+)')
         local _, _, _, _, _, _, _, Online, Dead = GetRaidRosterInfo(raid_index);
@@ -475,8 +480,8 @@ local function UnitHasAuras(unit, match_result)
     for aura_name, aura_config in pairs(aura_env.runtime.config) do
         if match_result[aura_name] then
             aura_result[aura_name] = {
-                match = is_dead or is_offline, -- if unit dead or offline then we say he 'has' aura
-                config = aura_config
+                match = not is_in_instance or is_dead or is_offline, -- if unit is not in the same instance,
+                config = aura_config                                 -- dead or offline then we say he 'has' aura
             }
         end
     end
