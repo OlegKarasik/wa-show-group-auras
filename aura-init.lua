@@ -1,5 +1,7 @@
 -- CONSTANTS --
 
+local AURA_VERSION = "1.2"
+
 local NORMAL_FONT_COLOR = CreateColor(1.0, 0.82, 0.0)
 local WHITE_FONT_COLOR  = CreateColor(1.0, 1.0, 1.0)
 local GREEN_FONT_COLOR  = CreateColor(0.1, 1.0, 0.1)
@@ -870,7 +872,7 @@ local loc_a = aura_env.config.localization.auras[locale]
 local loc_s = aura_env.config.localization.strings[locale]
 
 if aura_env.helpers.AuraIsInDebug() then
-    print('Aura version: 1.1.4')
+    print('Aura version: '..AURA_VERSION)
 end
 
 for _, aura_config in ipairs(aura_env.config.auras) do
