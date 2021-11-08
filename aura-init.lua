@@ -161,6 +161,10 @@ local aura_customz = {
     internal = {
         debug = false
     },
+    integration = {
+        blizzard_compact_raid_frames = true,
+        vuhdo = false
+    },
     localization = {
         auras = {
             english = {
@@ -381,9 +385,21 @@ aura_env.helpers.UnitNameSafe = UnitNameSafe
 ----------------------------
 
 local frame_priority = {
-    [1] = "^CompactRaid",
-    [2] = "^CompactParty"
 }
+
+local index = 1
+if aura_env.config.integration.blizzard_compact_raid_frames then
+    frame_priority[index + 1] = "^CompactRaid"
+    frame_priority[index + 2] = "^CompactParty"
+    
+    index = index + 2
+end
+
+if aura_env.config.integration.vuhdo then
+    frame_priority[index] = "^Vd1"
+    
+    index = index + 1
+end
 
 aura_env.runtime = {
     config = {
