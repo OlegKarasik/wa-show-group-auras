@@ -162,8 +162,7 @@ local aura_customz = {
         debug = false
     },
     integration = {
-        blizzard_compact_raid_frames = true,
-        vuhdo = false
+        glow = 1
     },
     localization = {
         auras = {
@@ -388,14 +387,18 @@ local frame_priority = {
 }
 
 local index = 1
-if aura_env.config.integration.blizzard_compact_raid_frames then
+if aura_env.config.integration.glow == 1 then
+    -- Integrate with Blizzard Raid Frames (default)
+    
     frame_priority[index + 1] = "^CompactRaid"
     frame_priority[index + 2] = "^CompactParty"
     
     index = index + 2
 end
 
-if aura_env.config.integration.vuhdo then
+if aura_env.config.integration.glow == 2 then
+    -- Integrate with Vuhdo
+
     frame_priority[index] = "^Vd1"
     
     index = index + 1
