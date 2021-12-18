@@ -11,8 +11,6 @@ function (allstates, event, unit)
                     units = { 
                     },
                     casters = {
-                    },
-                    tooltip = {
                     }
                 }
 
@@ -134,8 +132,8 @@ function (allstates, event, unit)
         
         -- Update tooltip content and visibility
         for aura_name, state in pairs(states) do
+            aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
             if state.matchCount > 0 then
-                aura_env.runtime.helpers.TooltipUpdateContent(aura_name, state)
                 aura_env.runtime.helpers.TooltipShow(aura_name)
             else 
                 aura_env.runtime.helpers.TooltipHide(aura_name)
@@ -381,13 +379,12 @@ function (allstates, event, unit)
                             [unit] = true
                         },
                         casters = {
-                        },
-                        tooltip = {
                         }
                     }
                 end
 
-                local state = allstates[aura_name]
+                -- Re-reading the state to make sure it exists at this point of time
+                state = allstates[aura_name]
                 
                 -- Updated tooltip content
                 aura_env.runtime.helpers.TooltipUpdateContent(aura_result.config.name, state)
