@@ -598,6 +598,18 @@ local function UnitGlowAllAuras(unit, aura_results)
     end
 end
 
+local function AuraCasters(aura_config)
+    local casters = { }
+    for member in WA_IterateGroupMembers() do
+        local _, english_class = UnitClass(member)
+        if english_class and aura_config.source == english_class then
+            casters[member] = true
+        end
+    end
+
+    return casters
+end
+
 local function TooltipHide(aura_name)
     local aura_env = G[GLOBAL_AURA_ENV_ID]
     local aura_frames = G[GLOBAL_AURA_FRAMES_ID]
@@ -785,6 +797,8 @@ aura_env.runtime.helpers.UnitFadeAllAuras = UnitFadeAllAuras
 
 aura_env.runtime.helpers.UnitGlowAura = UnitGlowAura
 aura_env.runtime.helpers.UnitGlowAllAuras = UnitGlowAllAuras
+
+aura_env.runtime.helpers.AuraCasters = AuraCasters
 
 aura_env.runtime.helpers.TooltipHide = TooltipHide
 aura_env.runtime.helpers.TooltipShow = TooltipShow

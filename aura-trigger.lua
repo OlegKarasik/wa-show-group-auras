@@ -23,7 +23,7 @@ function (allstates, event, unit)
             state.units[unit] = not aura_result.match
         end
     end
-    local function FillStatesWithGroupMembersInformation()
+    local function AuraStates()
         -- Initialize empty auras states
         local states = { }
         
@@ -128,7 +128,7 @@ function (allstates, event, unit)
         end
 
         -- Fill up states with group members information
-        local states, unit_results = FillStatesWithGroupMembersInformation()
+        local states, unit_results = AuraStates()
         
         -- Update tooltip content and visibility
         for aura_name, state in pairs(states) do
@@ -234,7 +234,7 @@ function (allstates, event, unit)
         end
         
         -- Fill up states with group members information
-        local states, unit_results = FillStatesWithGroupMembersInformation()
+        local states, unit_results = AuraStates()
 
         -- Update tooltip content and visibility
         for aura_name, state in pairs(states) do
@@ -378,8 +378,7 @@ function (allstates, event, unit)
                         units = {
                             [unit] = true
                         },
-                        casters = {
-                        }
+                        casters = aura_env.runtime.helpers.AuraCasters(aura_result.config)
                     }
                 end
 
