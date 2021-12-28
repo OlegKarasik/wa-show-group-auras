@@ -9,8 +9,9 @@ local GRAY_FONT_COLOR   = CreateColor(0.5, 0.5, 0.5)
 
 local GLOBAL_WAIT_QUEUE_ID       = aura_env.id..'-wa-show-group-auras-wait-queue'
 local GLOBAL_WAIT_QUEUE_FRAME_ID = aura_env.id..'-wa-show-group-auras-wait-frame'
-local GLOBAL_AURA_FRAMES         = aura_env.id..'-wa-show-group-auras-frames'
-local GLOBAL_AURA_ENV            = aura_env.id..'-wa-show-group-auras-env'
+local GLOBAL_AURA_CACHE_ID       = aura_env.id..'-wa-show-group-auras-cache'
+local GLOBAL_AURA_FRAMES_ID      = aura_env.id..'-wa-show-group-auras-frames'
+local GLOBAL_AURA_ENV_ID         = aura_env.id..'-wa-show-group-auras-env'
 
 -- GLOBAL --
 
@@ -19,7 +20,7 @@ local G = _G
 -- Store global reference of aura_env in global
 -- variable
 
-G[GLOBAL_AURA_ENV] = aura_env
+G[GLOBAL_AURA_ENV_ID] = aura_env
 
 -- CONFIGURATION MAPPINGS --
 
@@ -260,13 +261,13 @@ aura_env.helpers = {
 -- can be used everywhere inside the application
 
 local function AuraIsInDebug()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     return aura_env.config.internal.debug
 end
 
 local function UnitNameSafe(unit)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     return UnitName(unit) or '<unknown>'
 end
@@ -274,7 +275,7 @@ end
 local LCG = LibStub("LibCustomGlow-1.0")
 
 local function Glow(frame, aura_config) 
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Glowing frame ('..frame:GetName()..'), id ('..aura_config.id..')')
@@ -294,7 +295,7 @@ local function Glow(frame, aura_config)
 end
 
 local function Fade(frame, aura_config)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Fading frame ('..frame:GetName()..'), id ('..aura_config.id..')')
@@ -306,7 +307,7 @@ end
 -- from https://wowwiki.fandom.com/wiki/USERAPI_wait
 
 local function DelayExecution(f)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     -- WaitQueue is a global variable
     -- It is required to be global to ensure
@@ -335,7 +336,7 @@ local function DelayExecution(f)
         WaitQueueFrame:SetScript(
             "onUpdate",
             function (self, elapse)
-                local aura_env = G[GLOBAL_AURA_ENV]
+                local aura_env = G[GLOBAL_AURA_ENV_ID]
 
                 local count = #WaitQueue
                 
@@ -434,7 +435,7 @@ aura_env.runtime = {
 -- initialized
 
 local function UnitMatchAuraActivationRules(unit)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local name = nil
     if aura_env.helpers.AuraIsInDebug() then
@@ -470,7 +471,7 @@ local function UnitMatchAuraActivationRules(unit)
 end
 
 local function UnitHasAuras(unit, match_result)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local unit_name = nil
     if aura_env.helpers.AuraIsInDebug() then
@@ -538,7 +539,7 @@ local function UnitHasAuras(unit, match_result)
 end
 
 local function UnitFadeAura(unit, aura_config)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     if aura_config.glow.enable then 
         local frame = aura_env.runtime.helpers.GetFrame(unit)
@@ -549,7 +550,7 @@ local function UnitFadeAura(unit, aura_config)
 end
 
 local function UnitFadeAllAuras(unit)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local frame = nil
     for _, aura_config in pairs(aura_env.runtime.config_cache.glow) do
@@ -564,7 +565,7 @@ local function UnitFadeAllAuras(unit)
 end
 
 local function UnitGlowAura(unit, aura_config)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     if aura_config.glow.enable then 
         local frame = aura_env.runtime.helpers.GetFrame(unit)
@@ -575,7 +576,7 @@ local function UnitGlowAura(unit, aura_config)
 end
 
 local function UnitGlowAllAuras(unit, aura_results)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local frame = nil
     for _, aura_result in pairs(aura_results) do
@@ -598,8 +599,8 @@ local function UnitGlowAllAuras(unit, aura_results)
 end
 
 local function TooltipHide(aura_name)
-    local aura_env = G[GLOBAL_AURA_ENV]
-    local aura_frames = G[GLOBAL_AURA_FRAMES]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
+    local aura_frames = G[GLOBAL_AURA_FRAMES_ID]
 
     local frame = aura_frames[aura_name]
     if frame then
@@ -612,8 +613,8 @@ local function TooltipHide(aura_name)
 end
 
 local function TooltipShow(aura_name)
-    local aura_env = G[GLOBAL_AURA_ENV]
-    local aura_frames = G[GLOBAL_AURA_FRAMES]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
+    local aura_frames = G[GLOBAL_AURA_FRAMES_ID]
 
     local frame = aura_frames[aura_name]
     if frame then
@@ -630,7 +631,7 @@ local function TooltipShow(aura_name)
 end
 
 local function TooltipUpdateContent(aura_name, state)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Updating '..aura_name..' tooltip content')
@@ -640,13 +641,13 @@ local function TooltipUpdateContent(aura_name, state)
 end
 
 local function IsInCombat()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     return aura_env.runtime.combat
 end
 
 local function EnterCombat()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Entering combat')
@@ -655,7 +656,7 @@ local function EnterCombat()
 end
 
 local function LeaveCombat()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Leaving combat')
@@ -664,7 +665,7 @@ local function LeaveCombat()
 end
 
 local function ClearFrameCache()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Clearing frame cache')
@@ -673,7 +674,7 @@ local function ClearFrameCache()
 end
 
 local function IncrementGeneratorTick()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local tick = aura_env.runtime.tick;
     if aura_env.helpers.AuraIsInDebug() then
@@ -684,7 +685,7 @@ local function IncrementGeneratorTick()
 end
 
 local function GetGeneratorTick()
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     return aura_env.runtime.tick
 end
@@ -694,7 +695,7 @@ end
 -- from: https://wago.io/GetFrameGeneric
 
 local function GetFrames(target)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local function FindButtonsForUnit(frame, target)
         local results = {}
@@ -752,7 +753,7 @@ local function GetFrames(target)
 end
 
 local function GetFrame(target)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     if aura_env.helpers.AuraIsInDebug() then
         local name = aura_env.helpers.UnitNameSafe(target)
@@ -800,7 +801,7 @@ aura_env.runtime.helpers.GetFrame = GetFrame
 -- LOCAL FUNCTIONS USED IN HOOKS AND STUFF 
 
 local function OutputFormatRaid(state, localization, print_group)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local buffed, unbuffed = 0, 0
     local raid_groups = { }
@@ -846,7 +847,7 @@ local function OutputFormatRaid(state, localization, print_group)
 end
 
 local function OutputFormatParty(state, localization, print_member)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     for unit, aura_match in pairs(state.units) do
         if aura_match then
@@ -856,7 +857,7 @@ local function OutputFormatParty(state, localization, print_member)
 end
 
 local function OutputFormatCasters(state, localization, print_all_casters)
-    local aura_env = G[GLOBAL_AURA_ENV]
+    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
     local casters = { count = 0, units = { } }
     for unit in pairs(state.casters) do
@@ -977,10 +978,10 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             end
         end
         
-        local aura_frames = G[GLOBAL_AURA_FRAMES]
+        local aura_frames = G[GLOBAL_AURA_FRAMES_ID]
         if not aura_frames then
             aura_frames = { }
-            G[GLOBAL_AURA_FRAMES] = aura_frames
+            G[GLOBAL_AURA_FRAMES_ID] = aura_frames
         end
         if not aura_frames[aura_name] then
             if aura_env.helpers.AuraIsInDebug() then
@@ -995,7 +996,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             frame:SetScript(
                 "OnEnter",
                 function ()
-                    local aura_env = G[GLOBAL_AURA_ENV]
+                    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
                     GameTooltip:SetOwner(frame, "ANCHOR_RIGHT")
                     GameTooltip:ClearLines()
@@ -1121,7 +1122,7 @@ for _, aura_config in ipairs(aura_env.config.auras) do
             frame:SetScript(
                 "OnMouseDown",
                 function (self, button)
-                    local aura_env = G[GLOBAL_AURA_ENV]
+                    local aura_env = G[GLOBAL_AURA_ENV_ID]
 
                     if button == 'RightButton' then 
                         local tooltip = aura_env.runtime.tooltips[aura_name]
