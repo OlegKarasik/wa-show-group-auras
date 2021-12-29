@@ -100,7 +100,7 @@ function (allstates, event, unit)
             print('TRIGGER: GROUP_ROSTER_UPDATE')
         end
         
-        if aura_env.runtime.helpers.IsInCombat() then
+        if aura_env.runtime.helpers.Combat() then
             if aura_env.helpers.AuraIsInDebug() then
                 print('TRIGGER: In combat, ignoring') 
             end
@@ -280,7 +280,7 @@ function (allstates, event, unit)
             return false
         end
         
-        if aura_env.runtime.helpers.IsInCombat() then
+        if aura_env.runtime.helpers.Combat() then
             if aura_env.helpers.AuraIsInDebug() then
                 print('TRIGGER: In combat, ignoring') 
             end

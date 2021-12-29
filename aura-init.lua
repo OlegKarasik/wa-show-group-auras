@@ -662,7 +662,7 @@ local function TooltipUpdateContent(aura_name, state)
     aura_env.runtime.tooltips[aura_name].state = state
 end
 
-local function IsInCombat()
+local function Combat()
     local aura_env = G[GLOBAL_AURA_ENV_ID]
     
     return aura_env.runtime.state.combat
@@ -814,7 +814,7 @@ aura_env.runtime.helpers.TooltipHide = TooltipHide
 aura_env.runtime.helpers.TooltipShow = TooltipShow
 aura_env.runtime.helpers.TooltipUpdateContent = TooltipUpdateContent
 
-aura_env.runtime.helpers.IsInCombat  = IsInCombat
+aura_env.runtime.helpers.Combat  = Combat
 aura_env.runtime.helpers.EnterCombat = EnterCombat
 aura_env.runtime.helpers.LeaveCombat = LeaveCombat
 aura_env.runtime.helpers.IncrementGeneratorTick = IncrementGeneratorTick

@@ -63,7 +63,7 @@ end
 function TestCombatState:TestEnterCombat()
     -- Run
     aura_env.runtime.helpers.EnterCombat()
-    local result = aura_env.runtime.helpers.IsInCombat()
+    local result = aura_env.runtime.helpers.Combat()
 
     -- Assert
     lu.assertTrue(aura_env.runtime.state.combat, 'Now, there should be combat')
@@ -72,7 +72,7 @@ end
 function TestCombatState:TestLeaveCombat()
     -- Run
     aura_env.runtime.helpers.LeaveCombat()
-    local result = aura_env.runtime.helpers.IsInCombat()
+    local result = aura_env.runtime.helpers.Combat()
 
     -- Assert
     lu.assertFalse(result, 'Now, there should be no combat')
