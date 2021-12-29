@@ -7,22 +7,19 @@ require('ut-mocks')
 -- Initialize aura
 require('aura-init')
 
--- Tests for aura activation rules in Raid
+-- Tests for aura activation rules in raid
 TestUnitMatchAuraActivationRulesInRaid = { }
 function TestUnitMatchAuraActivationRulesInRaid:Setup()
     _G.IsInRaid  = function () return true end
     _G.UnitClass = function () return 'Warrior', 'WARRIOR' end
 
-    -- Cleanup usage of config_cache (by default it's classes table isn't initialized)
-    aura_env.runtime.config_cache.classes = { }
-end
-
-function TestUnitMatchAuraActivationRulesInRaid:TestRaidMembersShouldMatch()
-    -- Inject
+    -- Setup temporary cache
     aura_env.runtime.config_cache.classes['WARRIOR'] = {
         ['ut-aura-match'] = true
     }
+end
 
+function TestUnitMatchAuraActivationRulesInRaid:TestRaidMembersShouldMatch()
     -- Run
     for i = 0, 39 do 
         local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules('raid'..tostring(i))
@@ -31,7 +28,7 @@ function TestUnitMatchAuraActivationRulesInRaid:TestRaidMembersShouldMatch()
     end
 end
 
-function TestUnitMatchAuraActivationRulesInRaid:TestRaidPetsMembersShouldntMatch()
+function TestUnitMatchAuraActivationRulesInRaid:TestRaidPetMembersShouldntMatch()
     -- Run
     for i = 0, 39 do 
         local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules('raidpet'..tostring(i))
@@ -46,6 +43,55 @@ function TestUnitMatchAuraActivationRulesInRaid:TestPlayerShouldntMatch()
 end
 
 function TestUnitMatchAuraActivationRulesInRaid:Teardown()
+    _G.IsInRaid  = nil
+    _G.UnitClass = nil
+
+    -- Cleanup usage of config_cache (by default it's classes table isn't initialized)
+    aura_env.runtime.config_cache.classes = { }
+end
+
+-- Tests for aura activation rules in party
+TestUnitMatchAuraActivationRulesInParty = { }
+function TestUnitMatchAuraActivationRulesInParty:Setup()
+    _G.IsInRaid  = function () return false end
+    _G.UnitClass = function () return 'Warrior', 'WARRIOR' end
+
+    -- Setup temporary cache
+    aura_env.runtime.config_cache.classes['WARRIOR'] = {
+        ['ut-aura-match'] = true
+    }
+end
+
+function TestUnitMatchAuraActivationRulesInParty:TestGroupMembersShouldMatch()
+    -- Run
+    for i = 1, 5 do 
+        local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules('party'..tostring(i))
+        lu.assertNotNil(match_result, 'Unit (party'..tostring(i)..') should match aura activation rules')
+        lu.assertTrue(match_result['ut-aura-match'], 'Unit should match "ut-aura-match" aura activation rules')
+    end
+end
+
+function TestUnitMatchAuraActivationRulesInParty:TestGroupPetMembersShouldntMatch()
+    -- Run
+    for i = 1, 5 do 
+        local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules('partypet'..tostring(i))
+        lu.assertNil(match_result, 'Unit (partypet'..tostring(i)..') shouldn\'t match aura activation rules')
+    end
+end
+
+function TestUnitMatchAuraActivationRulesInParty:TestPlayerShouldMatch()    -- Inject
+    -- Inject
+    aura_env.runtime.config_cache.classes['WARRIOR'] = {
+        ['ut-aura-match'] = true
+    }
+
+    -- Run
+    local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules('player')
+    lu.assertNotNil(match_result, 'Unit (player) should match aura activation rules')
+    lu.assertTrue(match_result['ut-aura-match'], 'Unit should match "ut-aura-match" aura activation rules')
+end
+
+function TestUnitMatchAuraActivationRulesInParty:Teardown()
     _G.IsInRaid  = nil
     _G.UnitClass = nil
 
