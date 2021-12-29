@@ -422,9 +422,19 @@ aura_env.runtime = {
     },
     tooltips = {
     },
-    settings = {
+    state = {
+        combat = false,
+        -- auras: (map)
+        --   [aura]:
+        --     source: (string) - english class name who casts the aura
+        --     matchCount: (integer)
+        --     units: (map)
+        --       [unit] = true/false
+        --     casters: (map)
+        --       [unit] = index
+        auras = {
+        }
     },
-    combat = false,
     tick = 0
 }
 
@@ -655,7 +665,7 @@ end
 local function IsInCombat()
     local aura_env = G[GLOBAL_AURA_ENV_ID]
     
-    return aura_env.runtime.combat
+    return aura_env.runtime.state.combat
 end
 
 local function EnterCombat()
@@ -664,7 +674,7 @@ local function EnterCombat()
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Entering combat')
     end
-    aura_env.runtime.combat = true
+    aura_env.runtime.state.combat = true
 end
 
 local function LeaveCombat()
@@ -673,7 +683,7 @@ local function LeaveCombat()
     if aura_env.helpers.AuraIsInDebug() then
         print('HELPER: Leaving combat')
     end
-    aura_env.runtime.combat = false
+    aura_env.runtime.state.combat = false
 end
 
 local function ClearFrameCache()

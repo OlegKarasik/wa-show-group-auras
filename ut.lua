@@ -7,11 +7,14 @@ require('ut-mocks')
 -- Initialize aura
 require('aura-init')
 
--- Tests
+-- Tests for aura activation rules in Raid
 TestUnitMatchAuraActivationRulesInRaid = { }
 function TestUnitMatchAuraActivationRulesInRaid:Setup()
     _G.IsInRaid  = function () return true end
     _G.UnitClass = function () return 'Warrior', 'WARRIOR' end
+
+    -- Cleanup usage of config_cache (by default it's classes table isn't initialized)
+    aura_env.runtime.config_cache.classes = { }
 end
 
 function TestUnitMatchAuraActivationRulesInRaid:TestRaidMembersShouldMatch()
@@ -24,7 +27,7 @@ function TestUnitMatchAuraActivationRulesInRaid:TestRaidMembersShouldMatch()
     for i = 0, 39 do 
         local match_result = aura_env.runtime.helpers.UnitMatchAuraActivationRules('raid'..tostring(i))
         lu.assertNotNil(match_result, 'Unit (raid'..tostring(i)..') should match aura activation rules')
-        lu.assertItemsEquals(match_result, { ['ut-aura'] = true })
+        lu.assertTrue(match_result['ut-aura-match'], 'Unit should match "ut-aura-match" aura activation rules')
     end
 end
 
@@ -45,6 +48,39 @@ end
 function TestUnitMatchAuraActivationRulesInRaid:Teardown()
     _G.IsInRaid  = nil
     _G.UnitClass = nil
+
+    -- Cleanup usage of config_cache (by default it's classes table isn't initialized)
+    aura_env.runtime.config_cache.classes = { }
+end
+
+-- Tests for combat state
+TestCombatState = { }
+function TestCombatState:Setup()
+    -- Set default value
+    aura_env.runtime.state.combat = false
+end
+
+function TestCombatState:TestEnterCombat()
+    -- Run
+    aura_env.runtime.helpers.EnterCombat()
+    local result = aura_env.runtime.helpers.IsInCombat()
+
+    -- Assert
+    lu.assertTrue(aura_env.runtime.state.combat, 'Now, there should be combat')
+end
+
+function TestCombatState:TestLeaveCombat()
+    -- Run
+    aura_env.runtime.helpers.LeaveCombat()
+    local result = aura_env.runtime.helpers.IsInCombat()
+
+    -- Assert
+    lu.assertFalse(result, 'Now, there should be no combat')
+end
+
+function TestCombatState:Teardown()
+    -- Set default value
+    aura_env.runtime.state.combat = false
 end
 
 -- Execute Tests
